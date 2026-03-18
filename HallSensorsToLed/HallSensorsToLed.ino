@@ -3,11 +3,12 @@
 
 #define PIN 8
 #define NUMPIXELS 16
+#define SIZE 16
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 Mux myMux; 
 
-int myReadings[16]; 
+int myReadings[SIZE]; 
 
 void setup() {
   Serial.begin(9600);
@@ -17,11 +18,10 @@ void setup() {
 }
 
 void loop() {
-  myMux.fullMuxAnalogRead(16, myReadings);
-  int maxIndex = 0;
-  int maxValue = myReadings[0];
+  myMux.fullMuxAnalogRead(SIZE, myReadings);
+  int maxIndex = 0, maxValue = 0;
   
-  for(int i = 0; i < 16; i++) {
+  for(int i = 0; i < SIZE; i++) {
     Serial.print("Ch ");
     Serial.print(i);
     Serial.print(": ");
@@ -34,11 +34,15 @@ void loop() {
   }
   
   strip.clear();  
-  if(maxValue < 450 || maxValue > 550){
+  if(maxValue < 400 || maxValue > 600){
     strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
     strip.show();
   }
-  
+
   Serial.println("---");
+  Serial.println(maxValue);
+  Serial.println(maxIndex;
+  Serial.println("---");
+
   delay(100);
 }
