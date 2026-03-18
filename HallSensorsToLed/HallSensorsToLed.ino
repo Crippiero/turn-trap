@@ -4,6 +4,7 @@
 #define PIN 8
 #define NUMPIXELS 16
 #define SIZE 16
+#define DELAY 1000
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 Mux myMux; 
@@ -14,7 +15,7 @@ void setup() {
   Serial.begin(9600);
 
   myMux.setupMux(2, 3, 4, 5, A0);
-  
+
   strip.begin();
   strip.clear();
 }
@@ -42,9 +43,11 @@ void loop() {
   }
 
   Serial.println("---");
+  serial.print("maxValue:");
   Serial.println(maxValue);
+  serial.print("maxIndex:");
   Serial.println(maxIndex);
   Serial.println("---");
 
-  delay(100);
+  delay(DELAY);
 }
