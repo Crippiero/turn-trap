@@ -43,7 +43,7 @@ void loop() {
 
   Serial.println("---");
   Serial.println(maxValue);
-  Serial.println(maxIndex;
+  Serial.println(maxIndex);
   Serial.println("---");
 
   delay(100);
