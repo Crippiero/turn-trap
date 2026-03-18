@@ -39,13 +39,13 @@ void loop() {
   strip.clear();  
   if(maxValue < 400 || maxValue > 600){
     strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
-    strip.show();
   }
+  strip.show();
 
   Serial.println("---");
-  serial.print("maxValue:");
+  Serial.print("maxValue:");
   Serial.println(maxValue);
-  serial.print("maxIndex:");
+  Serial.print("maxIndex:");
   Serial.println(maxIndex);
   Serial.println("---");
 
