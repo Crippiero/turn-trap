@@ -33,9 +33,11 @@ void loop() {
     }
   }
   
-  strip.clear();
-  strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
-  strip.show();
+  strip.clear();  
+  if(maxValue < 450 || maxValue > 550){
+    strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
+    strip.show();
+  }
   
   Serial.println("---");
   delay(100);
