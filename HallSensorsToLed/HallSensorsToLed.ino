@@ -37,7 +37,7 @@ void loop() {
   }
   
   strip.clear();  
-  if(maxValue < 400 || maxValue > 600){
+  if(maxValue < 400 || maxValue > 500){
     strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
   }
   strip.show();
