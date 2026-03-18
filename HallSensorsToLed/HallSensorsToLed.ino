@@ -7,7 +7,7 @@
 #define DELAY 1000
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-Mux myMux(2000); 
+Mux myMux(2000); //di base è 5microsecondi, magari troviamo un valore intermedio tra 5 e 2000 che vada bene lo stesso
 
 uint16_t myReadings[SIZE]; 
 
@@ -37,7 +37,7 @@ void loop() {
   }
   
   strip.clear();  
-  if(maxValue < 400 || maxValue > 500){
+  if(maxValue < 400 || maxValue > 500){ //mettiamo i valori +- la media dei valori trovati????
     strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
   }
   strip.show();
