@@ -7,7 +7,7 @@
 #define DELAY 1000
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-Mux myMux(20); 
+Mux myMux(2000); 
 
 uint16_t myReadings[SIZE]; 
 
