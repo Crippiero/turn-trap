@@ -12,7 +12,9 @@ int myReadings[SIZE];
 
 void setup() {
   Serial.begin(9600);
+
   myMux.setupMux(2, 3, 4, 5, A0);
+  
   strip.begin();
   strip.clear();
 }
