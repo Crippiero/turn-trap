@@ -7,9 +7,9 @@
 #define DELAY 1000
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-Mux myMux; 
+Mux myMux(20); 
 
-int myReadings[SIZE]; 
+uint16_t myReadings[SIZE]; 
 
 void setup() {
   Serial.begin(9600);
