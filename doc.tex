@@ -1,15 +1,15 @@
-\iffalse
-  DA FARE:
-  - aggiungere immagine logo
-\fi
 \documentclass[a4paper,12pt]{article}
 
-% Pacchetti utili
-\usepackage{helvet}
-\renewcommand{\familydefault}{\sfdefault}
+% Pacchetti base e lingua
 \usepackage[italian]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+
+% Gestione Font con XeLaTeX
+\usepackage{fontspec}
+\setsansfont{Helvetica} % NOTA: Se sei su Windows e ti dà errore, scrivi {Arial}
+\setmonofont{Consolas}
+\renewcommand{\familydefault}{\sfdefault} % Imposta il font sans-serif (Helvetica) come predefinito per il testo
+
+% Altri pacchetti utili
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -18,6 +18,10 @@
 \usepackage{float}
 \usepackage{xcolor}
 \usepackage{titlesec}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[skins,listings,breakable]{tcolorbox} % <--- Pacchetto magico per i riquadri
 
 \geometry{margin=2.5cm}
 
@@ -42,6 +46,71 @@
   {\bfseries\color{subsubtitlegray}}
   {\thesubsubsection}{1em}{}
 
+%caption
+\captionsetup[table]{labelfont={color=subsubtitlegray}, font=small}
+\captionsetup[figure]{labelfont={color=subsubtitlegray}, font=footnotesize}
+
+%INTERPRETAZIONE CODICE
+
+
+% 1. Definizione dei colori
+% --- COLORI VS CODE LIGHT ---
+\definecolor{vsbg}{RGB}{254, 254, 254}        % Sfondo editor (quasi bianco)
+\definecolor{backcolour}{RGB}{248, 248, 248}  % Sfondo colonna numeri di riga 
+\definecolor{vsgreen}{RGB}{0, 128, 0}         % Commenti (verde scuro)
+\definecolor{vslightblue}{RGB}{0, 0, 255}     % Tipi di dato (blu standard)
+\definecolor{vsblue}{RGB}{0, 112, 193}        % Variabili (blu VS Code)
+\definecolor{vspurple}{RGB}{241, 92, 255}      % Parole chiave (viola scuro)
+\definecolor{vsyellow}{RGB}{252, 215, 3}      % Funzioni
+\definecolor{vsteal}{RGB}{38, 127, 153}       % Classi (ottanio scuro)
+\definecolor{vsorange}{RGB}{163, 21, 21}      % Stringhe (rosso mattone)
+% 2. Creazione dell'ambiente "codiceArduino"
+\newtcblisting{codiceArduino}[1][]{
+    listing only,
+    enhanced,                  
+    breakable,
+    colback=vsbg,
+    colframe=darkgray,         
+    boxrule=0.5pt,
+    arc=2mm,                   
+    left=6mm,                  
+    underlay={
+        \begin{tcbclipinterior}
+            % Usato backcolour invece del numberbg non definito
+            \fill[backcolour] (interior.south west) rectangle ([xshift=6mm]interior.north west);
+        \end{tcbclipinterior}
+    },
+    #1,
+    listing options={
+        language=C++,
+        basicstyle=\ttfamily\small\color{black}, % <-- Testo base nero per lo sfondo chiaro
+        numbers=left,
+        numberstyle=\tiny\color{darkgray},
+        numbersep=2mm,         
+        keywordstyle=\color{vspurple}, % <-- Colori VS Code corretti
+        stringstyle=\color{vsorange},
+        commentstyle=\color{vsgreen},
+        breaklines=true,
+        showstringspaces=false,
+        % --- GRUPPO 1: Parole chiave principali (Viola) ---
+        morekeywords={pinMode, digitalWrite, digitalRead, analogRead, analogWrite, delay, Serial, begin, println, print, HIGH, LOW, INPUT, OUTPUT, setup, loop},
+        % --- GRUPPO 2: Variabili e Funzioni personalizzate (Blu) ---
+        emph={myMux, strip, myReadings},
+        emphstyle=\color{vslightblue},
+        % --- GRUPPO 3: Classi (Verde acqua / Teal come in VS Code) ---
+        emph={[2]Mux, Adafruit_NeoPixel, MuxControl, h},
+        emphstyle={[2]\color{vsteal}},
+        % --- GRUPPO 4: Tipi di dato e Macro ---
+        emph={[3]uint16_t, int, void, SIZE, DELAY, PIN, NUMPIXELS, NEO_GRB, NEO_KHZ800},
+        emphstyle={[3]\color{vsblue}},
+        % --- GRUPPO 5: Funzioni (Giallo) ---
+        emph={[5]setup, loop, delay, begin, println, print, clear, fullMuxAnalogRead, setPixelColor, show, Color, setupMux},
+        emphstyle={[5]\color{vsyellow}},
+        % --- SOLO ACCENTI ITALIANI ---
+        literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1 
+    }
+}
+
 \title{}
 \begin{document}
 
@@ -50,15 +119,20 @@
     \centering
 
     % Spazio iniziale
-    \vspace*{2cm}
+    \vspace*{0.5cm}
 
     % Nome competizione
     {\Large \textsc{Campionati Nazionali di Robotica}}\\[0.5cm]
-    {\large Categoria: \textit{Inventa il tuo gioco}}\\[2cm]
+{\large Categoria: \textit{Inventa il tuo gioco}}\\[0.5cm] % <-- Spazio ridotto qui (era 2cm)
 
-    % Titolo progetto
-    {\Huge \bfseries \color{titleblue} Turn \& Trap}\\[0.5cm]
-    {\Large Sistema robotico interattivo basato su scacchiera modulare}\\[2cm]
+%logo squadra
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/logo.png} % Carica e centra l'immagine senza didascalia
+\end{center}
+
+
+% sottotitolo progetto
+{\Large Sistema robotico interattivo basato su scacchiera modulare}\\[2cm]
 
     % Linea decorativa
     \rule{0.8\textwidth}{0.5pt}\\[1.5cm]
@@ -75,28 +149,16 @@
     {\normalsize
      Istituto d'Istruzione Superiore "A. Gramsci - J. M. Keynes"\\
     Prato
-    }\\[2cm]
+    }\\[1cm]
 
     % Anno
-    {\normalsize Anno scolastico 2025/2026}\\[0.5cm]
+    {\normalsize Anno scolastico 2025/2026}
 
     \vfill
 
 \end{titlepage}
 
 %----------------------------------------------------------------
-
-\iffalse
-\begin{abstract}
-% SOMMARIO:
-Il progetto \textit{Turn \& Trap} consiste nella realizzazione di una scacchiera robotica interattiva che crea un labirinto procedurale in cui i giocatori si sfidano cercando di raggiungere il centro della griglia, le azioni dei giocatori vengono monitorate in tempo reale, aggiornando dinamicamente lo stato della griglia e fornendo un’esperienza di gioco interattiva basata sull’integrazione tra mondo fisico e digitale.
-
-Il sistema è costituito da una griglia di celle indipendenti, ciascuna dotata di sensori per la rilevazione della posizione delle pedine e dei LED per comunicare con il giocatore.
-
-Il controllo del sistema è affidato a un microcontrollore basato su piattaforma Arduino, che gestisce l’acquisizione dei segnali provenienti dai sensori mediante l’utilizzo di multiplexer analogici, permettendo la lettura di un elevato numero di ingressi con risorse hardware limitate. Il software, sviluppato in C++, esegue una scansione periodica della scacchiera e determina la presenza delle pedine in base a soglie di valori predefinite.
-
-\end{abstract}
-\fi
 
 \section{Introduzione}
 
@@ -133,11 +195,25 @@ La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sen
 Poiché la scacchiera è composta da 121 caselle, sarebbe necessario leggere un numero molto elevato di segnali provenienti dai sensori. Tuttavia, il microcontrollore ATmega328P dispone di un numero limitato di pin di ingresso/uscita (GPIO) e di ingressi analogici.
 
 \subsubsection*{Multiplexing dei sensori}
-Per ovviare a questa limitazione hardware vengono utilizzati multiplexer analogici (HP4067), che permettono di convogliare più segnali di ingresso su un singolo canale di lettura del microcontrollore.
+Per ovviare a questa limitazione hardware vengono utilizzati multiplexer analogici (ad esempio 74HC4067), che permettono di convogliare più segnali di ingresso su un singolo canale di lettura del microcontrollore.
 Il multiplexer funziona come un commutatore elettronico controllato digitalmente: tramite alcune linee di selezione è possibile scegliere quale tra i vari ingressi collegati venga inoltrato all’uscita. In questo modo il microcontrollore può interrogare sequenzialmente tutti i sensori, pur utilizzando un numero ridotto di pin.
+
+\begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.8\textwidth]{img/74HC4067.jpg} % Carica l'immagine e ne imposta la larghezza
+    \caption{Multiplexer analogico 74HC4067 da noi utilizzato.} % La didascalia
+    \label{fig:CD74HC4067}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
 
 \subsubsection*{Addressable LED}
 Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consente di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e le trappole da evitare, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
+
+\begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.8\textwidth]{img/addressableLed.png} % Carica l'immagine e ne imposta la larghezza
+    \caption{LED indirizzabili WS2812B da noi utilizzati.} % La didascalia
+    \label{fig:addressableLed}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
 
 \subsection{Software}
 
@@ -158,6 +234,24 @@ Durante il funzionamento del sistema, il software esegue una scansione periodica
 
 \section{Risultati}
 % facciamo vedere che funziona, con le prove che abbiamo fatto finora
+Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei sensori hall e dei multiplexer, abbiamo condotto una serie di test per valutare l’affidabilità del sistema di rilevazione. I risultati ottenuti hanno dimostrato che il sistema è in grado di identificare correttamente la posizione del magnete. Durante i test, abbiamo posizionato una pedina dotata di un magnete sopra un sensore e abbiamo monitorato i valori restituiti. I risultati hanno mostrato che quando la pedina è posizionata correttamente, il sensore restituisce un valore che rientra all’interno dell’intervallo di soglia aspettato tutte le volte, confermando la presenza della pedina sulla casella. Inoltre, abbiamo verificato che il sistema è in grado di distinguere tra la presenza e l’assenza della pedina, garantendo un funzionamento affidabile durante le fasi di gioco.
+
+\begin{table}[h]
+\centering
+\caption{Cinque misurazioni consegutive di dati raccolti durante i test di rilevazione dei sensori Hall. Il magnete è stato posizionato sopra al terzo sensore (sr2).}
+\begin{footnotesize}
+  \setlength{\tabcolsep}{14pt}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{sr0} & \textbf{sr1} & \textbf{sr2} & \textbf{sr3} & \textbf{sr4} & \textbf{sr5} & \textbf{sr6} & \textbf{sr7} & \textbf{sr8} & \textbf{sr9} \\ \hline
+452 & 442 & \textbf{633} & 446 & 433 & 449 & 444 & 433 & 448 & 443\\ \hline
+450 & 440 & \textbf{633} & 446 & 431 & 448 & 442 & 432 & 445 & 441 \\ \hline
+455 & 447 & \textbf{641} & 451 & 436 & 452 & 447 & 437 & 450 & 446 \\ \hline
+460 & 456 & \textbf{598} & 471 & 442 & 457 & 451 & 442 & 455 & 451\\ \hline
+461 & 455 & \textbf{602} & 471 & 441 & 457 & 451 & 442 & 455 & 450\\ \hline
+\end{tabular}
+\end{footnotesize}
+\end{table}
 
 \section{Bibliografia}
 % Inserisci le fonti:
@@ -170,6 +264,50 @@ Durante il funzionamento del sistema, il software esegue una scansione periodica
 
 \section{Appendice A - Codice}
 % Inserisci eventualmente parti di codice rilevanti
+\subsubsection*{Esempio di codice per la lettura dei sensori e controllo dei LED, utilizzato per i test di rilevazione.}
+
+\begin{codiceArduino}[]
+#include <MuxControl.h>
+#include <Adafruit_NeoPixel.h>
+
+#define PIN 8
+#define NUMPIXELS 10
+#define SIZE 10
+#define DELAY 1000
+
+Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Mux myMux(2000);
+
+uint16_t myReadings[SIZE]; 
+
+void setup() {
+  Serial.begin(9600);
+
+  myMux.setupMux(2, 3, 4, 5, A0);
+
+  strip.begin();
+  strip.clear();
+}
+
+void loop() {
+  myMux.fullMuxAnalogRead(SIZE, myReadings);
+  int maxIndex = 0, maxValue = 0;
+  
+  for(int i = 0; i < SIZE; i++) {
+    if(myReadings[i] > maxValue) {
+      maxValue = myReadings[i]; 
+      maxIndex = i;
+    }
+  }
+  
+  strip.clear();  
+  if(maxValue < 400 || maxValue > 500){
+    strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
+  }
+  strip.show();
+  delay(DELAY);
+}
+\end{codiceArduino}
 
 \section{Appendice B - Schemi}
 % Schemi elettrici, diagrammi, ecc.
