@@ -1,0 +1,169 @@
+\documentclass[a4paper,12pt]{article}
+
+% Pacchetti utili
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{titlesec}
+
+\geometry{margin=2.5cm}
+
+% https://www.color-hex.com/color-palette/1073443
+% definizione colori
+\definecolor{titleblue}{RGB}{5, 53, 121}      % titoli principali
+\definecolor{subtitlegray}{RGB}{29, 108, 167}   % sottotitoli
+
+% titoli principali
+\titleformat{\section}
+  {\Large\bfseries\color{titleblue}}
+  {\thesection}{1em}{}
+
+% sottotitoli
+\titleformat{\subsection}
+  {\large\bfseries\color{subtitlegray}}
+  {\thesubsection}{1em}{}
+
+
+\title{}
+\begin{document}
+
+%---------------------------TITLE PAGE---------------------------
+cdg
+\begin{titlepage}
+    \centering
+
+    % Spazio iniziale
+    \vspace*{2cm}
+
+    % Nome competizione
+    {\Large \textsc{Campionati Nazionali di Robotica}}\\[0.5cm]
+    {\large Categoria: \textit{Inventa il tuo gioco}}\\[2cm]
+
+    % Titolo progetto
+    {\Huge \bfseries \color{titleblue} Turn \& Trap}\\[0.5cm]
+    {\Large Sistema robotico interattivo basato su scacchiera modulare}\\[2cm]
+
+    % Linea decorativa
+    \rule{0.8\textwidth}{0.5pt}\\[1.5cm]
+
+    % Team
+    {\Large \textbf{Team Elleciesse}}\\[0.5cm]
+    {\normalsize
+    Leonardo Aliperti \\
+    Cristian Pierozzi \\
+    Sofia Monaco
+    }\\[1.5cm]
+
+    % Scuola
+    {\normalsize
+     Istituto d'Istruzione Superiore "A. Gramsci - J. M. Keynes"\\
+    Prato
+    }\\[2cm]
+
+    % Anno
+    {\normalsize Anno scolastico 2025/2026}\\[0.5cm]
+
+    \vfill
+
+\end{titlepage}
+
+%----------------------------------------------------------------
+
+\begin{abstract}
+% SOMMARIO:
+Il progetto \textit{Turn \& Trap} consiste nella realizzazione di una scacchiera robotica interattiva che crea un labirinto procedurale in cui i giocatori si sfidano cercando di raggiungere il centro della griglia, le azioni dei giocatori vengono monitorate in tempo reale, aggiornando dinamicamente lo stato della griglia e fornendo un’esperienza di gioco interattiva basata sull’integrazione tra mondo fisico e digitale.
+
+Il sistema è costituito da una griglia di celle indipendenti, ciascuna dotata di sensori per la rilevazione della posizione delle pedine e dei LED per comunicare con il giocatore.
+
+Il controllo del sistema è affidato a un microcontrollore basato su piattaforma Arduino, che gestisce l’acquisizione dei segnali provenienti dai sensori mediante l’utilizzo di multiplexer analogici, permettendo la lettura di un elevato numero di ingressi con risorse hardware limitate. Il software, sviluppato in C++, esegue una scansione periodica della scacchiera e determina la presenza delle pedine in base a soglie predefinite.
+
+
+\end{abstract}
+
+\section{Introduzione}
+
+Il progetto \textit{Turn \& Trap} nasce con l’obiettivo di unire fabbricazione digitale, microelettronica e programmazione algoritmica in un unico dispositivo interattivo. In un contesto sempre più dominato dal digitale, l’idea alla base del progetto è quella di riportare la logica computazionale su un piano fisico e tangibile, trasformandola in un’esperienza di gioco.
+
+Il sistema è costituito da una scacchiera robotica formata da una griglia di celle indipendenti, progettata per integrare sensori di misurazione del campo magnetico e LED indirizzabili. Ogni cella è stata modellata tramite software CAD e realizzata con stampa 3D FDM, con l’obiettivo di ottenere una struttura precisa, modulare e facilmente manutenibile.
+
+In questo contesto, il robot non è semplicemente un supporto fisico per il gioco, ma un sistema interattivo in grado di rilevare le azioni dei giocatori ed elaborarle tramite un microcontrollore. La scacchiera genera infatti labirinti procedurali che i giocatori devono risolvere spostandosi tra le caselle illuminate per raggiungere il centro, mentre il sistema monitora continuamente la posizione delle pedine e aggiorna lo stato della griglia.
+
+\section{Il team}
+
+Siamo gli Elleciesse, un gruppo composto da tre studenti che frequentano il quinto anno presso l’Istituto Gramsci Keynes di Prato. Siamo accomunati dalla passione per la tecnologia, l’innovazione e la voglia di metterci alla prova con progetti che permettono di unire diverse competenze tecniche, dalla progettazione hardware allo sviluppo software.
+
+\section{Le regole del gioco}
+
+
+\section{Descrizione fisica del robot}
+% rigenerazione del labirinto
+% descrizione della scacchiera
+% descrizione delle celle
+
+\section{Implementazione del sistema}
+% Descrizione ad alto livello
+% Spiega:
+% - cosa fa il robot
+% - come si comporta
+% - in quali situazioni viene utilizzato
+% Evita dettagli tecnici profondi (quelli dopo)
+
+\subsection{Software di controllo}
+Il software di controllo del sistema sarà sviluppato in C++, utilizzando l’ambiente di sviluppo tipicamente impiegato per le piattaforme basate su microcontrollore Arduino. In particolare, il sistema è progettato per funzionare su una scheda Arduino Uno, basata sul microcontrollore ATmega328P.
+
+\subsection{Sistema di rilevazione}
+La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sensori di campo magnetico analogici Hall (AH3503), posizionati sotto ciascuna casella. Questi sensori sono in grado di rilevare la presenza di un campo magnetico generato da un piccolo magnete inserito alla base delle pedine. Quando una pedina viene collocata sopra una casella, il sensore sottostante rileva la variazione del campo magnetico e restituisce un valore analogico proporzionale alla sua intensità.
+
+\subsection{Acquisizione dei segnali}
+Poiché la scacchiera è composta da 121 caselle, sarebbe necessario leggere un numero molto elevato di segnali provenienti dai sensori. Tuttavia, il microcontrollore ATmega328P dispone di un numero limitato di pin di ingresso/uscita (GPIO) e di ingressi analogici.
+
+\subsection{Multiplexing dei sensori}
+Per ovviare a questa limitazione hardware vengono utilizzati multiplexer analogici (HP4067), che permettono di convogliare più segnali di ingresso su un singolo canale di lettura del microcontrollore.
+
+Il multiplexer funziona come un commutatore elettronico controllato digitalmente: tramite alcune linee di selezione è possibile scegliere quale tra i vari ingressi collegati venga inoltrato all’uscita. In questo modo il microcontrollore può interrogare sequenzialmente tutti i sensori, pur utilizzando un numero ridotto di pin.
+
+\subsection{Libreria software}
+Per semplificare la gestione dei multiplexer all’interno del codice è stata sviluppata una libreria software dedicata, resa disponibile come progetto open source e pubblicata nel registro ufficiale delle librerie Arduino. Questa libreria fornisce un’interfaccia ad alto livello per selezionare i canali del multiplexer e leggere i valori provenienti dai sensori in modo semplice e strutturato.
+
+\subsection{Funzionamento del sistema}
+Durante il funzionamento del sistema, il software esegue una scansione periodica di tutti i sensori presenti sulla scacchiera. Per ciascuna casella viene letto il valore del campo magnetico rilevato dal sensore di effetto Hall. Se il valore misurato rientra all’interno di un intervallo di soglia predefinito, il sistema interpreta tale condizione come la presenza di una pedina nella relativa posizione della scacchiera.
+
+\section{Risultati}
+% Descrivi i test effettuati:
+% - cosa hai testato
+% - come
+% - risultati ottenuti
+% Usa numeri, dati, tabelle se possibile
+%tabella per vedere che quando c'è il magnete il sensore rileva un valore diverso dagli altri sensori
+
+\section{Conclusioni}
+% Riassumi:
+% - cosa hai realizzato
+% - se gli obiettivi sono stati raggiunti
+% - possibili sviluppi futuri
+
+\section{Bibliografia}
+% Inserisci le fonti:
+% - siti web
+% - documentazione tecnica
+% - librerie usate
+% Usa formato coerente
+
+\appendix
+
+\section{Appendice A - Codice}
+% Inserisci eventualmente parti di codice rilevanti
+
+\section{Appendice B - Schemi}
+% Schemi elettrici, diagrammi, ecc.
+
+\end{document}
