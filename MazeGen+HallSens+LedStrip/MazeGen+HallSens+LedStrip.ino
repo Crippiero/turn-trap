@@ -175,3 +175,19 @@ void loop() {
 
     delay(DELAY);
 }
+
+/*
+for(int i=0; i<ROWS; i++){
+    for(int j=0; j<COLS; j++){
+        if(m[i][j] == '#'){
+            strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+        }
+        else if(m[i][j] == 'x'){
+            strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+        }   
+        else if(m[i][j] == 'G'){
+            strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+        }       
+    }
+}
+*/
