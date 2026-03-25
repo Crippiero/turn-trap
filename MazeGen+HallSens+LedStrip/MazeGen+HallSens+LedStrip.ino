@@ -119,14 +119,20 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     if (pl3.x != -1 && pl3.y != -1) connectPlayerToMaze(pl3.x, pl3.y, '3');
     if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y, '4');
 
-    // 4. Stampa su Monitor Seriale
+    // 4. Stampa su led neopixel
     Serial.println("\n\n--- NUOVO LABIRINTO ---");
-    for (int8_t i = 0; i < ROWS; i++) {  
-        for (int8_t j = 0; j < COLS; j++) {
-            Serial.print(maze[i][j]);
-            Serial.print(" ");
+    for(uint8_t i=0; i<ROWS; i++){
+        for(uint8_t j=0; j<COLS; j++){
+            if(m[i][j] == '#'){
+                strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+            }
+            else if(m[i][j] == 'x'){
+                strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+            }   
+            else if(m[i][j] == 'G'){
+                strip.setPixelColor((i*ROWS)+j, strip.Color(255, 0, 0));
+            }       
         }
-        Serial.println();
     }
 }
 
