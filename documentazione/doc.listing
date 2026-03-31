@@ -1,0 +1,40 @@
+#include <MuxControl.h>
+#include <Adafruit_NeoPixel.h>
+
+#define PIN 8
+#define NUMPIXELS 10
+#define SIZE 10
+#define DELAY 1000
+
+Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Mux myMux(2000);
+
+uint16_t myReadings[SIZE];
+
+void setup() {
+  Serial.begin(9600);
+
+  myMux.setupMux(2, 3, 4, 5, A0);
+
+  strip.begin();
+  strip.clear();
+}
+
+void loop() {
+  myMux.fullMuxAnalogRead(SIZE, myReadings);
+  int maxIndex = 0, maxValue = 0;
+
+  for(int i = 0; i < SIZE; i++) {
+    if(myReadings[i] > maxValue) {
+      maxValue = myReadings[i];
+      maxIndex = i;
+    }
+  }
+
+  strip.clear();
+  if(maxValue < 400 || maxValue > 500){
+    strip.setPixelColor(maxIndex, strip.Color(255, 0, 0));
+  }
+  strip.show();
+  delay(DELAY);
+}

@@ -1,0 +1,9 @@
+\babel@toc {italian}{}\relax 
+\babel@toc {italian}{}\relax 
+\contentsline {section}{\numberline {1}Introduzione}{2}{section.1}%
+\contentsline {section}{\numberline {2}Le regole del gioco}{2}{section.2}%
+\contentsline {section}{\numberline {3}Sviluppo del progetto}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Descrizione fisica del robot}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Hardware}{4}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Software}{5}{subsection.3.3}%
+\contentsline {section}{\numberline {A}Codice}{8}{appendix.Alph1}%
