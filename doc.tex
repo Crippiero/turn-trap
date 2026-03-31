@@ -27,7 +27,7 @@
 
 % https://www.color-hex.com/color-palette/1073443
 % definizione colori
-\definecolor{titleblue}{RGB}{29, 0, 167}      % titoli principali
+\definecolor{titleblue}{RGB}{60, 71, 204}      % titoli principali
 \definecolor{subtitlegray}{RGB}{5, 53, 121}   % sottotitoli
 \definecolor{subsubtitlegray}{RGB}{29, 108, 167}   % sottosottotitoli
 
@@ -132,7 +132,7 @@
 
 
 % sottotitolo progetto
-{\Large Sistema robotico interattivo basato su scacchiera modulare}\\[2cm]
+{\Large una frase accattivante}\\[2cm]
 
     % Linea decorativa
     \rule{0.8\textwidth}{0.5pt}\\[1.5cm]
@@ -169,27 +169,57 @@ Il sistema è costituito da una scacchiera robotica formata da una griglia di ce
 In questo contesto, il robot non è semplicemente un supporto fisico per il gioco, ma un sistema interattivo in grado di rilevare le azioni dei giocatori ed elaborarle tramite un microcontrollore. La scacchiera genera infatti labirinti procedurali che i giocatori devono risolvere spostandosi tra le caselle illuminate per raggiungere il centro, mentre il sistema monitora continuamente la posizione delle pedine e aggiorna lo stato della griglia.
 
 \section{Le regole del gioco}
-Il gioco è pensato per 1-4 giocatori e si sviluppa su una scacchiera composta da 121 celle (11x11). Ogni giocatore inizia posizionando la propria pedina su uno dei 4 angoli. L’obiettivo è raggiungere il centro della griglia, dove si trova una casella speciale di colore blu. Per muoversi, i giocatori devono seguire un percorso delineato da "muri" di colore rosso, che viene generato dinamicamente dal sistema. Ogni giocatore può effettuare uno spostamento di una casella per ogni turno. Durante il gioco, alcune caselle possono essere evidenziate di colore giallo per indicare un evento speciale, influenzando la strategia dei giocatori, una volta posizionata la pedina sulla casella essa cambierà colore diventando verde per indicare un bonus oppure viola per indicare un malus. Il sistema monitora in tempo reale la posizione delle pedine e rigenera il percorso quando l'ultimo giocatore dichiara la fine del suo turno attraverso un apposito pulsante. Il gioco termina quando un giocatore raggiunge la casella centrale, dichiarandosi vincitore.
+Il gioco è pensato per 2-4 giocatori e si sviluppa su una scacchiera composta da 121 celle (11×11). Ogni giocatore inizia posizionando la propria pedina su uno dei 4 angoli.
+Per muoversi i giocatori devono seguire un percorso delineato da caselle di colore rosso che fungono da "muri", generate dinamicamente dal sistema. Ogni giocatore può effettuare uno spostamento di una casella per turno. Inoltre durante il gioco verranno generate casualmente delle caselle gialle ad indicare un evento speciale. Una volta posizionata la pedina su una di queste caselle, essa cambierà il proprio colore: verde per indicare un bonus, viola per indicare un malus. Il sistema monitora in tempo reale la posizione delle pedine e rigenera il percorso quando l'ultimo giocatore dichiara la fine del suo turno attraverso un apposito pulsante. Vince chi raggiunge per primo la casella
+centrale di colore blu, decretando la fine del gioco.
 
 \section{Sviluppo del progetto}
 
 \subsection{Descrizione fisica del robot}
-% descrizione della scacchiera
-% descrizione delle celle
-\subsubsection*{Modello CAD}
-%immagini del modello CAD
+Il robot è formato da una scacchiera composta da 121 celle indipendenti, ognuna dotata di un sensore di campo magnetico e di due LED indirizzabili. Abbiamo scelto di suddividire la stampa della base della scacchiera in 4 blocchi uniti tra loro tramite incastri, in modo da facilitare la realizzazione e l’assemblaggio. 
+Ogni cella ha dimensione 28x28mm e altezza 7mm, per poter contenere il sensore e i led. In ogni casella, sul fondo, sono presenti due fori per il passaggio dei cavi di alimentazione e il segnale dei sensori, che vengono convogliati verso i multiplexer e successivamente al microcontrollore. I cavi del segale dei led, invece, percorrono una serpentina lungo tutte le caselle, in modo da poter controllare tutti i LED. Sotto alle caselle è presente una struttura di contenimento che ospita i multiplexer e il microcontrollore, come mostrato in figura 1.
 
-\subsubsection*{La casella}
-%come funziona una casella singola
+\begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.8\textwidth]{img/scacchiera.png} % Carica l'immagine e ne imposta la larghezza
+    \caption{Scacchiera robotica.} % La didascalia
+    \label{fig:scacchiera}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
+Il design della scacchiera è stato realizzato con software CAD, tenendo conto delle dimensioni dei componenti elettronici e della necessità di un facile assemblaggio. La scacchiera è realizzata in PLA, un materiale plastico comunemente utilizzato nella stampa 3D FDM, scelto per la sua facilità di lavorazione e resistenza sufficiente per l’uso previsto.
 
-\subsubsection*{collegamenti interni}
-%come sono connesse tra loro le caselle, i sensori, i led, i multiplexer e il microcontrollore
 
 \subsection{Hardware}
-%aggiungere dei led
+
 
 \subsubsection*{Rilevazione della pedina}
-La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sensori di campo magnetico analogici Hall (AH3503), posizionati sotto ciascuna casella. Questi sensori sono in grado di rilevare la presenza di un campo magnetico generato da un piccolo magnete inserito alla base delle pedine. Quando una pedina viene collocata sopra una casella, il sensore sottostante rileva la variazione del campo magnetico e restituisce un valore analogico proporzionale alla sua intensità.
+La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sensori di campo magnetico analogici Hall (AH3503), posizionati sotto ciascuna casella. Questi sensori sono in grado di rilevare la presenza di un campo magnetico generato da un piccolo magnete inserito alla base delle pedine. Quando una pedina viene collocata sopra una casella, il sensore sottostante rileva la variazione del campo magnetico e restituisce un valore analogico proporzionale alla sua intensità.\\
+
+\begin{figure}[H]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.6\textwidth]{img/hall.png} % Carica l'immagine e ne imposta la larghezza
+    \caption{Funzionamento sensore ad effetto hall.} % La didascalia
+    \label{fig:sensoreHall}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
+
+% facciamo vedere che funziona, con le prove che abbiamo fatto finora
+Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei sensori hall e dei multiplexer, abbiamo condotto una serie di test per valutare l’affidabilità del sistema di rilevazione. I risultati ottenuti hanno dimostrato che il sistema è in grado di identificare correttamente la posizione del magnete. Durante i test, abbiamo posizionato una pedina dotata di un magnete sopra un sensore e abbiamo monitorato i valori restituiti. I risultati hanno mostrato che quando la pedina è posizionata correttamente, il sensore restituisce un valore che rientra all’interno dell’intervallo di soglia aspettato tutte le volte, confermando la presenza della pedina sulla casella. Inoltre, abbiamo verificato che il sistema è in grado di distinguere tra la presenza e l’assenza della pedina, garantendo un funzionamento affidabile durante le fasi di gioco.
+
+\begin{table}[H]
+\centering
+\caption{Cinque misurazioni consegutive di dati raccolti durante i test di rilevazione dei sensori Hall. Il magnete è stato posizionato sopra al terzo sensore (sr2).}
+\begin{footnotesize}
+  \setlength{\tabcolsep}{14pt}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{sr0} & \textbf{sr1} & \textbf{sr2} & \textbf{sr3} & \textbf{sr4} & \textbf{sr5} & \textbf{sr6} & \textbf{sr7} & \textbf{sr8} & \textbf{sr9} \\ \hline
+452 & 442 & \textbf{633} & 446 & 433 & 449 & 444 & 433 & 448 & 443\\ \hline
+450 & 440 & \textbf{633} & 446 & 431 & 448 & 442 & 432 & 445 & 441 \\ \hline
+455 & 447 & \textbf{641} & 451 & 436 & 452 & 447 & 437 & 450 & 446 \\ \hline
+460 & 456 & \textbf{598} & 471 & 442 & 457 & 451 & 442 & 455 & 451\\ \hline
+461 & 455 & \textbf{602} & 471 & 441 & 457 & 451 & 442 & 455 & 450\\ \hline
+\end{tabular}
+\end{footnotesize}
+\end{table}
 
 \subsubsection*{Acquisizione dei segnali}
 Poiché la scacchiera è composta da 121 caselle, sarebbe necessario leggere un numero molto elevato di segnali provenienti dai sensori. Tuttavia, il microcontrollore ATmega328P dispone di un numero limitato di pin di ingresso/uscita (GPIO) e di ingressi analogici.
@@ -206,7 +236,7 @@ Il multiplexer funziona come un commutatore elettronico controllato digitalmente
 \end{figure}
 
 \subsubsection*{Addressable LED}
-Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consente di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e le trappole da evitare, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
+Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consentono di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e le trappole da evitare, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
 
 \begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
@@ -233,25 +263,7 @@ Per generare il labirinto procedurale, il software implementa un algoritmo di ge
 Durante il funzionamento del sistema, il software esegue una scansione periodica di tutti i sensori presenti sulla scacchiera. Per ciascuna casella viene letto il valore del campo magnetico rilevato dal sensore di effetto Hall. Se il valore misurato rientra all’interno di un intervallo di soglia predefinito, il sistema interpreta tale condizione come la presenza di una pedina nella relativa posizione della scacchiera. L’algoritmo per la generazione del labirinto, quindi, crea un percorso unico, indicato attraverso i led, che i giocatori devono seguire per raggiungere il centro della scacchiera, mentre le caselle non facenti parte del percorso vengono illuminate in modo diverso per indicare la loro natura di bonus o malus.
 
 \section{Risultati}
-% facciamo vedere che funziona, con le prove che abbiamo fatto finora
-Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei sensori hall e dei multiplexer, abbiamo condotto una serie di test per valutare l’affidabilità del sistema di rilevazione. I risultati ottenuti hanno dimostrato che il sistema è in grado di identificare correttamente la posizione del magnete. Durante i test, abbiamo posizionato una pedina dotata di un magnete sopra un sensore e abbiamo monitorato i valori restituiti. I risultati hanno mostrato che quando la pedina è posizionata correttamente, il sensore restituisce un valore che rientra all’interno dell’intervallo di soglia aspettato tutte le volte, confermando la presenza della pedina sulla casella. Inoltre, abbiamo verificato che il sistema è in grado di distinguere tra la presenza e l’assenza della pedina, garantendo un funzionamento affidabile durante le fasi di gioco.
 
-\begin{table}[h]
-\centering
-\caption{Cinque misurazioni consegutive di dati raccolti durante i test di rilevazione dei sensori Hall. Il magnete è stato posizionato sopra al terzo sensore (sr2).}
-\begin{footnotesize}
-  \setlength{\tabcolsep}{14pt}
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
-\hline
-\textbf{sr0} & \textbf{sr1} & \textbf{sr2} & \textbf{sr3} & \textbf{sr4} & \textbf{sr5} & \textbf{sr6} & \textbf{sr7} & \textbf{sr8} & \textbf{sr9} \\ \hline
-452 & 442 & \textbf{633} & 446 & 433 & 449 & 444 & 433 & 448 & 443\\ \hline
-450 & 440 & \textbf{633} & 446 & 431 & 448 & 442 & 432 & 445 & 441 \\ \hline
-455 & 447 & \textbf{641} & 451 & 436 & 452 & 447 & 437 & 450 & 446 \\ \hline
-460 & 456 & \textbf{598} & 471 & 442 & 457 & 451 & 442 & 455 & 451\\ \hline
-461 & 455 & \textbf{602} & 471 & 441 & 457 & 451 & 442 & 455 & 450\\ \hline
-\end{tabular}
-\end{footnotesize}
-\end{table}
 
 \section{Bibliografia}
 % Inserisci le fonti:
