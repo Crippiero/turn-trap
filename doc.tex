@@ -170,14 +170,14 @@ In questo contesto, il robot non è semplicemente un supporto fisico per il gioc
 
 \section{Le regole del gioco}
 Il gioco è pensato per 2-4 giocatori e si sviluppa su una scacchiera composta da 121 celle (11×11). Ogni giocatore inizia posizionando la propria pedina su uno dei 4 angoli.
-Per muoversi i giocatori devono seguire un percorso delineato da caselle di colore rosso che fungono da "muri", generate dinamicamente dal sistema. Ogni giocatore può effettuare uno spostamento di una casella per turno. Inoltre durante il gioco verranno generate casualmente delle caselle gialle ad indicare un evento speciale. Una volta posizionata la pedina su una di queste caselle, essa cambierà il proprio colore: verde per indicare un bonus, viola per indicare un malus. Il sistema monitora in tempo reale la posizione delle pedine e rigenera il percorso quando l'ultimo giocatore dichiara la fine del suo turno attraverso un apposito pulsante. Vince chi raggiunge per primo la casella
+Per muoversi i giocatori devono seguire un percorso delineato da caselle di colore rosso che fungono da "muri", generate dinamicamente dal sistema. Ogni giocatore può effettuare uno spostamento di una casella per turno. Inoltre durante il gioco verranno generate casualmente delle caselle gialle ad indicare un evento speciale. Una volta posizionata la pedina su una di queste caselle, essa cambierà il proprio colore: verde per indicare un bonus, come ottenere un turno extra oppure far saltare il turno al giocatore successivo, viola per indicare un malus, come essere obbligati a saltare un turno o essere spostati al bordo della scaccchiera. Il sistema monitora in tempo reale la posizione delle pedine e rigenera il percorso quando l'ultimo giocatore dichiara la fine del suo turno attraverso un apposito pulsante. Vince chi raggiunge per primo la casella
 centrale di colore blu, decretando la fine del gioco.
 
 \section{Sviluppo del progetto}
 
 \subsection{Descrizione fisica del robot}
-Il robot è formato da una scacchiera composta da 121 celle indipendenti, ognuna dotata di un sensore di campo magnetico e di due LED indirizzabili. Abbiamo scelto di suddividire la stampa della base della scacchiera in 4 blocchi uniti tra loro tramite incastri, in modo da facilitare la realizzazione e l’assemblaggio. 
-Ogni cella ha dimensione 28x28mm e altezza 7mm, per poter contenere il sensore e i led. In ogni casella, sul fondo, sono presenti due fori per il passaggio dei cavi di alimentazione e il segnale dei sensori, che vengono convogliati verso i multiplexer e successivamente al microcontrollore. I cavi del segale dei led, invece, percorrono una serpentina lungo tutte le caselle, in modo da poter controllare tutti i LED. Sotto alle caselle è presente una struttura di contenimento che ospita i multiplexer e il microcontrollore, come mostrato in figura 1.
+Il robot è formato da una scacchiera composta da 121 celle indipendenti, ognuna dotata di un sensore di campo magnetico e di due LED indirizzabili. Abbiamo scelto di suddividire la stampa della scacchiera in 4 miniature unite tra loro tramite incastri, in modo da facilitare la realizzazione e l’assemblaggio. 
+Ogni cella ha dimensione 28x28mm e altezza 7mm, per poter contenere il sensore e i led. In ogni casella, sul fondo, sono presenti due fori per il passaggio dei cavi di alimentazione e il segnale dei sensori, che vengono convogliati verso i multiplexer e successivamente al microcontrollore. I cavi del segnale dei led, invece, percorrono una serpentina lungo tutte le caselle, in modo da poter controllare tutti i LED. Sotto alle caselle è presente una struttura di contenimento che ospita i multiplexer e il microcontrollore, come mostrato in figura 1.
 
 \begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
@@ -236,7 +236,7 @@ Il multiplexer funziona come un commutatore elettronico controllato digitalmente
 \end{figure}
 
 \subsubsection*{Addressable LED}
-Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consentono di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e le trappole da evitare, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
+Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consentono di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e il centro, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
 
 \begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
@@ -251,16 +251,16 @@ Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è do
 Il software di controllo del sistema sarà sviluppato in C++, utilizzando l’ambiente di sviluppo tipicamente impiegato per le piattaforme basate su microcontrollore Arduino. In particolare, il sistema è progettato per funzionare su una scheda Arduino Uno, basata sul microcontrollore ATmega328P.
 
 \subsubsection*{Libreria software MuxControl}
-Per semplificare la gestione dei multiplexer all’interno del codice è stata sviluppata una libreria software dedicata, resa disponibile come progetto open source e pubblicata nel registro ufficiale delle librerie Arduino. Questa libreria fornisce un’interfaccia ad alto livello per selezionare i canali del multiplexer e leggere i valori provenienti dai sensori in modo semplice e strutturato.
+Per semplificare la gestione dei multiplexer abbiamo sviluppato una libreria software dedicata, resa disponibile come progetto open source e pubblicata nel registro ufficiale delle librerie Arduino. Questa libreria fornisce un’interfaccia ad alto livello per selezionare i canali del multiplexer e leggere i valori provenienti dai sensori in modo semplice e strutturato.
 
 \subsubsection*{Controllo led}
-I LED indirizzabili WS2812B vengono controllati tramite la libreria Adafruit NeoPixel, che consente di inviare comandi per impostare il colore e l’intensità luminosa di ciascun LED in modo indipendente. Questa funzionalità è fondamentale per la dinamica di gioco, poiché permette di evidenziare le caselle attive, i percorsi da seguire e le trappole da evitare.
+I LED indirizzabili WS2812B vengono controllati tramite la libreria Adafruit NeoPixel, che consente, in modo indipendente per ogni led, di impostare colore e intensità luminosa. Questa funzionalità è fondamentale per la dinamica di gioco, poiché permette di evidenziare le caselle attive, i percorsi da seguire e le trappole da evitare.
 
 \subsubsection*{Generazione del labirinto}
 Per generare il labirinto procedurale, il software implementa un algoritmo di generazione basato sull'algoritmo DFS (Depth-First Search) con backtracking. La particolarità di questa implementazione è la natura dinamica: il labirinto non è statico, ma viene rigenerato integralmente più volte durante la partita, garantendo però la raggiungibilità degli obiettivi tramite una funzione di "scavo" assistito. 
 
 \subsubsection*{Funzionamento del sistema}
-Durante il funzionamento del sistema, il software esegue una scansione periodica di tutti i sensori presenti sulla scacchiera. Per ciascuna casella viene letto il valore del campo magnetico rilevato dal sensore di effetto Hall. Se il valore misurato rientra all’interno di un intervallo di soglia predefinito, il sistema interpreta tale condizione come la presenza di una pedina nella relativa posizione della scacchiera. L’algoritmo per la generazione del labirinto, quindi, crea un percorso unico, indicato attraverso i led, che i giocatori devono seguire per raggiungere il centro della scacchiera, mentre le caselle non facenti parte del percorso vengono illuminate in modo diverso per indicare la loro natura di bonus o malus.
+Durante la fase di gioco, il software esegue una scansione periodica di tutti i sensori di campo magnetico ad effetto hall presenti sulla scacchiera. Se il valore misurato rientra all’interno di un intervallo di soglia predefinito, il sistema interpreta tale condizione come la presenza di una pedina nella relativa posizione della scacchiera. L’algoritmo per la generazione del labirinto, quindi, crea un percorso, considerando le posizioni delle pedine, ed esso viene mostrato ai giocatori attraverso i led.
 
 \section{Risultati}
 
