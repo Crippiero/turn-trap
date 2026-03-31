@@ -18,7 +18,8 @@
 \usepackage{float}
 \usepackage{xcolor}
 \usepackage{titlesec}
-
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[skins,listings,breakable]{tcolorbox} % <--- Pacchetto magico per i riquadri
@@ -132,7 +133,7 @@
 
 
 % sottotitolo progetto
-{\Large una frase accattivante}\\[2cm]
+{\Large Sei tu a muovere la pedina,\\o è la scacchiera a muovere te?}\\[2cm]
 
     % Linea decorativa
     \rule{0.8\textwidth}{0.5pt}\\[1.5cm]
@@ -149,7 +150,7 @@
     {\normalsize
      Istituto d'Istruzione Superiore "A. Gramsci - J. M. Keynes"\\
     Prato
-    }\\[1cm]
+    }\\[0.5cm]
 
     % Anno
     {\normalsize Anno scolastico 2025/2026}
@@ -162,11 +163,18 @@
 
 \section{Introduzione}
 
-Siamo gli Elleciesse, un gruppo composto da tre studenti che frequentano il quinto anno presso l’Istituto Gramsci Keynes di Prato. Siamo accomunati dalla passione per la tecnologia, l’innovazione e la voglia di metterci alla prova con progetti che permettono di unire diverse competenze tecniche, dalla progettazione hardware allo sviluppo software. Nel documento che segue presentiamo il nostro progetto \textit{Turn \& Trap}: un sistema robotico, basato su una scacchiera interattiva, progettato per offrire un’esperienza di gioco unica che combina elementi di fabbricazione digitale, microelettronica e programmazione algoritmica.
+Siamo gli Elleciesse, un gruppo composto da tre studenti che frequentano il quinto anno presso l’Istituto Gramsci Keynes di Prato. Siamo accomunati dalla passione per la tecnologia, l’innovazione e la voglia di mettersi alla prova con progetti che permettono di unire diverse competenze tecniche, dalla progettazione hardware allo sviluppo software. Nel documento che segue presentiamo il nostro progetto \textit{Turn \& Trap}: un sistema robotico, basato su una scacchiera interattiva, progettato per offrire un’esperienza di gioco unica che combina elementi di fabbricazione digitale, microelettronica e programmazione algoritmica.
 
 Il sistema è costituito da una scacchiera robotica formata da una griglia di celle indipendenti, progettata per integrare sensori di misurazione del campo magnetico e LED indirizzabili. Ogni cella è stata modellata tramite software CAD e realizzata con stampa 3D FDM.
 
 In questo contesto, il robot non è semplicemente un supporto fisico per il gioco, ma un sistema interattivo in grado di rilevare le azioni dei giocatori ed elaborarle tramite un microcontrollore. La scacchiera genera infatti labirinti procedurali che i giocatori devono risolvere spostandosi tra le caselle illuminate per raggiungere il centro, mentre il sistema monitora continuamente la posizione delle pedine e aggiorna lo stato della griglia.
+
+\begin{figure}[H]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.8\textwidth]{img/prototipo.jpg}
+    \caption{Prototipo della schacchiera 5x5 in fase di realizzazione.} % La didascalia
+    \label{fig:addressableLed}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
 
 \section{Le regole del gioco}
 Il gioco è pensato per 2-4 giocatori e si sviluppa su una scacchiera composta da 121 celle (11×11). Ogni giocatore inizia posizionando la propria pedina su uno dei 4 angoli.
@@ -196,7 +204,7 @@ La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sen
 
 \begin{figure}[H]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
-    \includegraphics[width=0.6\textwidth]{img/hall.png} % Carica l'immagine e ne imposta la larghezza
+    \includegraphics[width=0.8\textwidth]{img/hall.png} % Carica l'immagine e ne imposta la larghezza
     \caption{Funzionamento sensore ad effetto hall.} % La didascalia
     \label{fig:sensoreHall}     % Un'etichetta per citare l'immagine nel testo
 \end{figure}
@@ -257,25 +265,61 @@ Per semplificare la gestione dei multiplexer abbiamo sviluppato una libreria sof
 I LED indirizzabili WS2812B vengono controllati tramite la libreria Adafruit NeoPixel, che consente, in modo indipendente per ogni led, di impostare colore e intensità luminosa. Questa funzionalità è fondamentale per la dinamica di gioco, poiché permette di evidenziare le caselle attive, i percorsi da seguire e le trappole da evitare.
 
 \subsubsection*{Generazione del labirinto}
-Per generare il labirinto procedurale, il software implementa un algoritmo di generazione basato sull'algoritmo DFS (Depth-First Search) con backtracking. La particolarità di questa implementazione è la natura dinamica: il labirinto non è statico, ma viene rigenerato integralmente più volte durante la partita, garantendo però la raggiungibilità degli obiettivi tramite una funzione di "scavo" assistito. 
+Per generare il labirinto procedurale, il software utilizza l’algoritmo Depth-First Search (DFS) con meccanismo di backtracking per la generazione di labirinti ”perfetti”. L’algoritmo procede in modo esplorativo selezionando casualmente una cella adiacente non ancora visitata e rimuovendo la barriera logica tra di esse; contestualmente, salva le coordinate della cella appena lasciata all'interno di una struttura dati LIFO (Last-In, First-Out), ovvero lo stack. Qualora il sistema raggiunga un ”vicolo cieco” (una cella in cui tutti i nodi adiacenti risultano già visitati), interviene la funzione di backtracking: il sistema estrae sequenzialmente le celle dallo stack (operazione di pop), ripercorrendo a ritroso il percorso fino alla prima cella dotata di rami inesplorati, da cui riprende l'avanzamento.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    >=Stealth,
+    node distance=1.2cm and 1.2cm,
+    font=\small\sffamily,
+    % Definizione degli stili
+    base/.style={draw, thick, align=center, inner sep=0.2cm},
+    startstop/.style={base, rectangle, rounded corners, fill=black!10, minimum width=1.5cm},
+    process/.style={base, rectangle, fill=white, minimum width=2.2cm},
+    decision/.style={base, diamond, aspect=1.8, fill=black!5, inner sep=0pt},
+    % Stile delle linee
+    arrow/.style={->, thick, rounded corners=2pt}
+]
+    % --- 1. POSIZIONAMENTO DEI NODI ---
+    \node[startstop] (start) {\textbf{Inizio}};
+    \node[process, right=0.8cm of start] (init) {Inizializza\\Griglia};
+    \node[decision, right=0.8cm of init] (dec1) {Celle\\libere?};
+    \node[decision, right=1.2cm of dec1] (dec2) {Vicini\\liberi?};
+    \node[process, above=0.8cm of dec2] (scava) {Scava e\\Spingi};
+    \node[decision, right=1.3cm of dec2] (dec3) {Stack\\vuoto?};
+    \node[process, below=0.8cm of dec3] (pop) {Pop\\(Backtrack)};
+    \node[startstop, right=1cm of dec3] (fine) {\textbf{Fine}};
+
+    % --- 2. FRECCE PRINCIPALI (Asse Orizzontale) ---
+    \draw[arrow] (start) -- (init);
+    \draw[arrow] (init) -- (dec1);
+    \draw[arrow] (dec1) -- node[above] {\textbf{Sì}} (dec2);
+    \draw[arrow] (dec2) -- node[above] {\textbf{No}} (dec3);
+    \draw[arrow] (dec3) -- node[above] {\textbf{Sì}} (fine);
+
+    % --- 3. FRECCE DI RITORNO E DIRAMAZIONI ---
+    \draw[arrow] (dec1.south) -- ++(0,-2.2) -| node[pos=0.1, above] {\textbf{No}} (fine.south);
+    \draw[arrow] (dec2.north) -- node[left] {\textbf{Sì}} (scava.south);
+    \draw[arrow] (scava.west) -| (dec1.north);
+    \draw[arrow] (dec3.south) -- node[right] {\textbf{No}} (pop.north);
+    \draw[arrow] (pop.west) -| (dec2.south);
+\end{tikzpicture}%
+}
+\caption{Diagramma di flusso della generazione del labirinto (DFS con Backtracking).}
+\label{fig:dfs_flowchart}
+\end{figure}
+
+Questo approccio assicura una copertura completa della griglia e una distribuzione dei percorsi caratterizzata da corridoi lunghi e ramificazioni profonde. La particolarità di questa implementazione è la natura dinamica: il labirinto non è statico, ma viene rigenerato integralmente più volte durante la partita, garantendo però la raggiungibilità degli obiettivi tramite una funzione di ”scavo” assistito. In questo modo, anche se il labirinto viene rigenerato, i giocatori non si troveranno mai in una situazione di stallo, poiché il sistema è progettato per garantire sempre un percorso valido verso il centro della scacchiera.
 
 \subsubsection*{Funzionamento del sistema}
 Durante la fase di gioco, il software esegue una scansione periodica di tutti i sensori di campo magnetico ad effetto hall presenti sulla scacchiera. Se il valore misurato rientra all’interno di un intervallo di soglia predefinito, il sistema interpreta tale condizione come la presenza di una pedina nella relativa posizione della scacchiera. L’algoritmo per la generazione del labirinto, quindi, crea un percorso, considerando le posizioni delle pedine, ed esso viene mostrato ai giocatori attraverso i led.
 
-\section{Risultati}
-
-
-\section{Bibliografia}
-% Inserisci le fonti:
-% - siti web
-% - documentazione tecnica
-% - librerie usate
-% Usa formato coerente
-
 \appendix
+\newpage
 
-\section{Appendice A - Codice}
-% Inserisci eventualmente parti di codice rilevanti
+\section{Codice}
 \subsubsection*{Esempio di codice per la lettura dei sensori e controllo dei LED, utilizzato per i test di rilevazione.}
 
 \begin{codiceArduino}[]
@@ -320,8 +364,4 @@ void loop() {
   delay(DELAY);
 }
 \end{codiceArduino}
-
-\section{Appendice B - Schemi}
-% Schemi elettrici, diagrammi, ecc.
-
 \end{document}
