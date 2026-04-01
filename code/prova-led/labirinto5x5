@@ -1,0 +1,65 @@
+#include <Adafruit_NeoPixel.h>
+
+#define PIN1 3
+#define PIN2 4
+#define PIN3 5
+#define PIN4 6
+#define PIN5 7
+#define NUMPIXELS 5
+
+Adafruit_NeoPixel strip1(NUMPIXELS, PIN1, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip2(NUMPIXELS, PIN2, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3(NUMPIXELS, PIN3, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip4(NUMPIXELS, PIN4, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip5(NUMPIXELS, PIN5, NEO_GRB + NEO_KHZ800);
+void setup() {
+  strip1.begin();
+  strip1.clear();
+  strip2.begin();
+  strip2.clear();
+  strip3.begin();
+  strip3.clear();
+  strip4.begin();
+  strip4.clear();
+  strip5.begin();
+  strip5.clear();
+
+}
+
+void loop() {
+  for(int i=0; i<=NUMPIXELS; i++){
+    strip1.setPixelColor(i, strip1.Color(255, 255, 255));
+    if(i==1 || i==3){
+      strip1.setPixelColor(i, strip1.Color(255, 0, 0));
+    }
+    strip1.show();
+  } 
+  for(int i=0; i<=NUMPIXELS; i++){
+    strip2.setPixelColor(i, strip2.Color(255, 255, 255));
+    if(i==3){
+      strip2.setPixelColor(i, strip2.Color(255, 0, 0));
+    }
+    strip2.show();
+  }  
+  for(int i=0; i<=NUMPIXELS; i++){
+    strip3.setPixelColor(i, strip3.Color(255, 255, 255));
+    if(i==1){
+      strip3.setPixelColor(i, strip3.Color(255, 0, 0));
+    }
+    strip3.show();
+  }
+  for(int i=0; i<=NUMPIXELS; i++){
+    strip4.setPixelColor(i, strip4.Color(255, 0, 0));
+    if(i==2){
+      strip4.setPixelColor(i, strip4.Color(255, 255, 255));
+    }
+    strip4.show();
+  }
+  for(int i=0; i<=NUMPIXELS; i++){
+    strip5.setPixelColor(i, strip5.Color(255, 255, 255));
+    if(i==1 || i==4){
+      strip5.setPixelColor(i, strip5.Color(255, 0, 0));
+    }
+    strip5.show();
+  }
+}
