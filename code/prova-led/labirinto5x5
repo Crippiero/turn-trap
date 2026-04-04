@@ -28,38 +28,42 @@ void setup() {
 
 void loop() {
   for(int i=0; i<=NUMPIXELS; i++){
-    strip1.setPixelColor(i, strip1.Color(255, 255, 255));
-    if(i==1 || i==3){
-      strip1.setPixelColor(i, strip1.Color(255, 0, 0));
+    strip1.setPixelColor(i, strip1.Color(255, 0, 0));
+    if(i==2 || i==3){
+      strip1.setPixelColor(i, strip1.Color(255, 255, 255));
     }
     strip1.show();
   } 
   for(int i=0; i<=NUMPIXELS; i++){
-    strip2.setPixelColor(i, strip2.Color(255, 255, 255));
-    if(i==3){
-      strip2.setPixelColor(i, strip2.Color(255, 0, 0));
+    strip2.setPixelColor(i, strip2.Color(255, 0, 0));
+    if(i==0 || i==4 || i==3){
+      strip2.setPixelColor(i, strip2.Color(255, 255, 255));
     }
     strip2.show();
   }  
   for(int i=0; i<=NUMPIXELS; i++){
     strip3.setPixelColor(i, strip3.Color(255, 255, 255));
-    if(i==1){
+    if(i==3){
       strip3.setPixelColor(i, strip3.Color(255, 0, 0));
+    }
+    if(i==2){
+      strip3.setPixelColor(i, strip3.Color(0, 0, 255));
     }
     strip3.show();
   }
   for(int i=0; i<=NUMPIXELS; i++){
-    strip4.setPixelColor(i, strip4.Color(255, 0, 0));
-    if(i==2){
-      strip4.setPixelColor(i, strip4.Color(255, 255, 255));
+    strip4.setPixelColor(i, strip4.Color(255, 255, 255));
+    if(i==1){
+      strip4.setPixelColor(i, strip4.Color(255, 0, 0));
     }
     strip4.show();
   }
   for(int i=0; i<=NUMPIXELS; i++){
-    strip5.setPixelColor(i, strip5.Color(255, 255, 255));
-    if(i==1 || i==4){
-      strip5.setPixelColor(i, strip5.Color(255, 0, 0));
+    strip5.setPixelColor(i, strip5.Color(255, 0, 0));
+    if(i==3 || i==0){
+      strip5.setPixelColor(i, strip5.Color(255, 255, 255));
     }
+    strip5.setPixelColor(3, strip5.Color(255,180,0));
     strip5.show();
   }
 }
