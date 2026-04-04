@@ -184,13 +184,13 @@ centrale di colore blu, decretando la fine del gioco.
 \section{Sviluppo del progetto}
 
 \subsection{Descrizione fisica del robot}
-Il robot è formato da una scacchiera composta da 121 celle indipendenti, ognuna dotata di un sensore di campo magnetico e di due LED indirizzabili. Abbiamo scelto di suddividire la stampa della scacchiera in 4 miniature unite tra loro tramite incastri, in modo da facilitare la realizzazione e l’assemblaggio. 
-Ogni cella ha dimensione 28x28mm e altezza 7mm, per poter contenere il sensore e i led. In ogni casella, sul fondo, sono presenti due fori per il passaggio dei cavi di alimentazione e il segnale dei sensori, che vengono convogliati verso i multiplexer e successivamente al microcontrollore. I cavi del segnale dei led, invece, percorrono una serpentina lungo tutte le caselle, in modo da poter controllare tutti i LED. Sotto alle caselle è presente una struttura di contenimento che ospita i multiplexer e il microcontrollore, come mostrato in figura 1.
+Il robot è formato da una scacchiera composta da 121 celle indipendenti, ognuna dotata di un sensore di campo magnetico e di due LED indirizzabili. Abbiamo scelto di suddividire la stampa della scacchiera in 4 sezioni unite tra loro tramite incastri, in modo da facilitare la realizzazione e l’assemblaggio. 
+Ogni cella ha dimensione 28x28mm e altezza 10mm, per poter contenere il sensore e i led. In ogni casella, sul fondo, sono presenti due fori per il passaggio dei cavi di alimentazione e il segnale dei sensori, che vengono convogliati verso i multiplexer e successivamente al microcontrollore. I cavi del segnale dei led, invece, percorrono una serpentina lungo tutte le caselle, in modo da poter controllare tutti i LED. Sotto alle caselle è presente una struttura di contenimento che ospita i multiplexer e il microcontrollore, come mostrato in figura 2.
 
 \begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
     \includegraphics[width=0.8\textwidth]{img/scacchiera.png} % Carica l'immagine e ne imposta la larghezza
-    \caption{Scacchiera robotica.} % La didascalia
+    \caption{Modello scacchiera.} % La didascalia
     \label{fig:scacchiera}     % Un'etichetta per citare l'immagine nel testo
 \end{figure}
 Il design della scacchiera è stato realizzato con software CAD, tenendo conto delle dimensioni dei componenti elettronici e della necessità di un facile assemblaggio. La scacchiera è realizzata in PLA, un materiale plastico comunemente utilizzato nella stampa 3D FDM, scelto per la sua facilità di lavorazione e resistenza sufficiente per l’uso previsto.
@@ -200,7 +200,7 @@ Il design della scacchiera è stato realizzato con software CAD, tenendo conto d
 
 
 \subsubsection*{Rilevazione della pedina}
-La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sensori di campo magnetico analogici Hall (AH3503), posizionati sotto ciascuna casella. Questi sensori sono in grado di rilevare la presenza di un campo magnetico generato da un piccolo magnete inserito alla base delle pedine. Quando una pedina viene collocata sopra una casella, il sensore sottostante rileva la variazione del campo magnetico e restituisce un valore analogico proporzionale alla sua intensità.\\
+La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sensori di campo magnetico analogici ad effetto Hall (AH3503), posizionati sotto ciascuna casella. Questi sensori sono in grado di rilevare la presenza di un campo magnetico generato da un piccolo magnete inserito alla base delle pedine. Quando una pedina viene collocata sopra una casella, il sensore sottostante rileva la variazione del campo magnetico e restituisce un valore analogico proporzionale alla sua intensità.\\
 
 \begin{figure}[H]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
@@ -210,11 +210,11 @@ La rilevazione della posizione delle pedine sulla scacchiera avviene tramite sen
 \end{figure}
 
 % facciamo vedere che funziona, con le prove che abbiamo fatto finora
-Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei sensori hall e dei multiplexer, abbiamo condotto una serie di test per valutare l’affidabilità del sistema di rilevazione. I risultati ottenuti hanno dimostrato che il sistema è in grado di identificare correttamente la posizione del magnete. Durante i test, abbiamo posizionato una pedina dotata di un magnete sopra un sensore e abbiamo monitorato i valori restituiti. I risultati hanno mostrato che quando la pedina è posizionata correttamente, il sensore restituisce un valore che rientra all’interno dell’intervallo di soglia aspettato tutte le volte, confermando la presenza della pedina sulla casella. Inoltre, abbiamo verificato che il sistema è in grado di distinguere tra la presenza e l’assenza della pedina, garantendo un funzionamento affidabile durante le fasi di gioco.
+Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei sensori hall e dei multiplexer, abbiamo condotto una serie di test per valutare l’affidabilità del sistema di rilevazione. I risultati ottenuti hanno dimostrato che il sistema è in grado di identificare correttamente la posizione del magnete. Durante i test, abbiamo posizionato una pedina dotata di un magnete sopra un sensore e abbiamo monitorato i valori restituiti. I risultati hanno mostrato che quando la pedina è posizionata correttamente, il sensore restituisce un valore che rientra all’interno dell’intervallo di soglia aspettato tutte le volte, confermando la presenza della pedina sulla casella. Quindi, abbiamo verificato che il sistema è in grado di distinguere tra la presenza e l’assenza della pedina, garantendo un funzionamento affidabile durante le fasi di gioco.
 
 \begin{table}[H]
 \centering
-\caption{Cinque misurazioni consegutive di dati raccolti durante i test di rilevazione dei sensori Hall. Il magnete è stato posizionato sopra al terzo sensore (sr2).}
+\caption{Cinque misurazioni consecutive di dati raccolti durante i test di rilevazione dei sensori Hall. Il magnete è stato posizionato sopra al terzo sensore (sr2).}
 \begin{footnotesize}
   \setlength{\tabcolsep}{14pt}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
@@ -230,11 +230,11 @@ Utilizzando un prototipo creato con lo scopo di verificare il funzionamento dei 
 \end{table}
 
 \subsubsection*{Acquisizione dei segnali}
-Poiché la scacchiera è composta da 121 caselle, sarebbe necessario leggere un numero molto elevato di segnali provenienti dai sensori. Tuttavia, il microcontrollore ATmega328P dispone di un numero limitato di pin di ingresso/uscita (GPIO) e di ingressi analogici.
+Poiché la scacchiera è composta da 121 caselle, è necessario leggere un numero molto elevato di segnali provenienti dai sensori. Tuttavia, il microcontrollore ATmega328P dispone di un numero limitato di pin di ingresso/uscita (GPIO) e di ingressi analogici.
 
 \subsubsection*{Multiplexing dei sensori}
-Per ovviare a questa limitazione hardware vengono utilizzati multiplexer analogici (ad esempio 74HC4067), che permettono di convogliare più segnali di ingresso su un singolo canale di lettura del microcontrollore.
-Il multiplexer funziona come un commutatore elettronico controllato digitalmente: tramite alcune linee di selezione è possibile scegliere quale tra i vari ingressi collegati venga inoltrato all’uscita. In questo modo il microcontrollore può interrogare sequenzialmente tutti i sensori, pur utilizzando un numero ridotto di pin.
+Per ovviare a questa limitazione hardware abbiamo deciso di utilizzare dei multiplexer analogici (ad esempio 74HC4067), che permettono di convogliare più segnali di ingresso su un singolo canale di lettura del microcontrollore.
+Per selezionare il canale desiderato il microcontrollore invia un segnale in codice binario al multiplexer tramite 4 pin digitali, in questo modo è possibile leggere il valore in ingresso tramite un solo pin analogico. Tale sistema permette di interrogare sequenzialmente tutti i sensori, pur utilizzando un numero ridotto di pin.
 
 \begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
     \centering                  % Centra l'immagine nella pagina
@@ -246,23 +246,23 @@ Il multiplexer funziona come un commutatore elettronico controllato digitalmente
 \subsubsection*{Addressable LED}
 Per la comunicazione visiva con i giocatori, ogni casella della scacchiera è dotata di due LED indirizzabili (WS2812B), che consentono di illuminare ogni cella con colori diversi in modo indipendente. Questi LED vengono utilizzati per evidenziare i percorsi da seguire, le caselle speciali e il centro, contribuendo a creare un’esperienza di gioco coinvolgente e dinamica.
 
-\begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
-    \centering                  % Centra l'immagine nella pagina
-    \includegraphics[width=0.8\textwidth]{img/addressableLed.png} % Carica l'immagine e ne imposta la larghezza
-    \caption{LED indirizzabili WS2812B da noi utilizzati.} % La didascalia
-    \label{fig:addressableLed}     % Un'etichetta per citare l'immagine nel testo
-\end{figure}
-
 \subsection{Software}
 
 \subsubsection*{Software di controllo}
-Il software di controllo del sistema sarà sviluppato in C++, utilizzando l’ambiente di sviluppo tipicamente impiegato per le piattaforme basate su microcontrollore Arduino. In particolare, il sistema è progettato per funzionare su una scheda Arduino Uno, basata sul microcontrollore ATmega328P.
+Il software di controllo del sistema sarà sviluppato in C++, utilizzando l’ambiente di sviluppo tipicamente impiegato per i progetti basati su microcontrollore Arduino. In particolare, il sistema è progettato per funzionare su una scheda Arduino Uno, basata sul microcontrollore ATmega328P.
 
 \subsubsection*{Libreria software MuxControl}
-Per semplificare la gestione dei multiplexer abbiamo sviluppato una libreria software dedicata, resa disponibile come progetto open source e pubblicata nel registro ufficiale delle librerie Arduino. Questa libreria fornisce un’interfaccia ad alto livello per selezionare i canali del multiplexer e leggere i valori provenienti dai sensori in modo semplice e strutturato.
+Per semplificare la gestione dei multiplexer abbiamo sviluppato una libreria software dedicata, resa disponibile come progetto open source e pubblicata nel registro ufficiale delle librerie Arduino. Questa libreria fornisce un’interfaccia ad alto livello per selezionare i canali del multiplexer e leggere i valori provenienti dai sensori in modo semplice e strutturato. Esistono, infatti, due funzioni principali: la prima permette di leggere un singolo canale del multiplexer, specificando il numero del canale desiderato, mentre la seconda consente di effettuare una lettura completa di tutti i canali, restituendo i valori in un vettore. Questa funzionalità è particolarmente utile per acquisire rapidamente lo stato di tutti i sensori durante le fasi di gioco.
 
 \subsubsection*{Controllo led}
 I LED indirizzabili WS2812B vengono controllati tramite la libreria Adafruit NeoPixel, che consente, in modo indipendente per ogni led, di impostare colore e intensità luminosa. Questa funzionalità è fondamentale per la dinamica di gioco, poiché permette di evidenziare le caselle attive, i percorsi da seguire e le trappole da evitare.
+
+\begin{figure}[h]               % [h] suggerisce a LaTeX di metterla "qui" (here)
+    \centering                  % Centra l'immagine nella pagina
+    \includegraphics[width=0.8\textwidth]{img/addressableLed.png} % Carica l'immagine e ne imposta la larghezza
+    \caption{LED indirizzabili WS2812B.} % La didascalia
+    \label{fig:addressableLed}     % Un'etichetta per citare l'immagine nel testo
+\end{figure}
 
 \subsubsection*{Generazione del labirinto}
 Per generare il labirinto procedurale, il software utilizza l’algoritmo Depth-First Search (DFS) con meccanismo di backtracking per la generazione di labirinti ”perfetti”. L’algoritmo procede in modo esplorativo selezionando casualmente una cella adiacente non ancora visitata e rimuovendo la barriera logica tra di esse; contestualmente, salva le coordinate della cella appena lasciata all'interno di una struttura dati LIFO (Last-In, First-Out), ovvero lo stack. Qualora il sistema raggiunga un ”vicolo cieco” (una cella in cui tutti i nodi adiacenti risultano già visitati), interviene la funzione di backtracking: il sistema estrae sequenzialmente le celle dallo stack (operazione di pop), ripercorrendo a ritroso il percorso fino alla prima cella dotata di rami inesplorati, da cui riprende l'avanzamento.
