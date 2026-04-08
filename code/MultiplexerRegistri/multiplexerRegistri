@@ -171,6 +171,6 @@ void loop() {
     } 
     else { break; }
   }
-  Serial.println("---");
+  Serial.println("%------------%");
   delay(LOOP_DELAY);
 }
