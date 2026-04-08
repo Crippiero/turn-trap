@@ -1,0 +1,84 @@
+/*  %--------------------------------------------------%  */
+
+/*  RILEVAZIONE MAGNETI CON I REGISTRI - (no MuxControl)  */
+
+/*  %--------------------------------------------------%  */
+
+const uint8_t CHANNEL = 11;
+const uint8_t ROWS = 11;
+const uint8_t READINGS_DELAY = 1;
+const uint16_t RANGE = 50;
+
+//Per contenere le coordinate dei punti
+struct Point {
+    int8_t x, y;
+};
+
+/*
+  OUTPUT PINS TO SELECT THE MUX'S CHANNEL 
+    S0 = 2   => PORTD (Bit 2)
+    S1 = 3   => PORTD (Bit 3)
+    S2 = 4   => PORTD (Bit 4)
+    S3 = 5   => PORTD (Bit 5)
+    S4 = 8   => PORTB (Bit 0) - Seleziona la riga (Mux Master)
+    S5 = 9   => PORTB (Bit 1)
+    S6 = 10  => PORTB (Bit 2)
+    S7 = 11  => PORTB (Bit 3)
+    SIG = A0 => PORTC
+*/
+
+// %---------------------------------------------------------------------------------------------------------------------%
+//  ATTENZIONE la matrice cosi occupa 242 byte di memoria e l'Arduino Uno ne ha 2048 byte a disposizione per le variabili
+// %---------------------------------------------------------------------------------------------------------------------%
+void FullAnalogRead(uint16_t muxValues[ROWS][CHANNEL]){
+  // Ciclo esterno: scorro le righe (MUX Master) tramite PORTB
+  for(byte j = 0; i < ROWS; i++){
+    // Azzero i primi 4 bit di PORTB (pin 8, 9, 10, 11)
+    PORTB &= ~0b00001111;
+    // Scrivo l'indice della riga sui pin 8-11
+    PORTB |= j;
+
+    // Ciclo interno: scorro le colonne (MUX Slave) tramite PORTD
+    for(byte i = 0; i < CHANNEL; i++){
+      //Azzero i pin 2, 3, 4 e 5 per evitare errori
+      PORTD &= ~0b00111100;
+
+      //Con il bitshift prendo l'indice del canale (i), inteso come numero binario, sposto i bit di 2 posizioni per coincidere con i canali 2, 3, 4 e 5
+      PORTD |= (i << 2);
+
+      //Delay per evitare letture di canali sovrapposti
+      delayMicroseconds(READINGS_DELAY);
+
+      //dubby read => per scaricare il condensatore Sample & Hold del ADC (analog - digital converter)
+      analogRead(A0);
+      muxValues[j][i] = analogRead(A0);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  //  |=    =>  è l'operatore OR, dove lascio zero, rimane come gia impostato, dove metto 1 lascia 1
+  //  &= ~  =>  è l'opreatore AND NOT quindi dove metto uno a prescindere da cosa c'era mette 0
+  //Imposto i pin 2, 3, 4 e 5 come OUTPUT
+  DDRD |= 0b00111100;
+  //Imposto i pin 8, 9, 10 e 11 come OUTPUT
+  DDRB |= 0b00001111;
+  //Imposto il pin A0 come INPUT
+  DDRC &= ~0b00000001;
+}
+
+void loop() {
+  uint16_t muxReadings[CHANNEL][ROWS];
+  FullAnalogRead(muxReadings);
+
+  for (uint8_t j = 0; j < ROWS; j++) {
+    for (uint8_t i = 0; i < CHANNEL; i++){
+      if(muxReadings[j][i] < (512 - RANGE) || muxReadings[j][i] > (512 + RANGE))
+      {
+        //li aggiungo a una lista dove mi salvo i 4 > (se ne esiste 4)
+      }
+    }
+  }
+
+}
