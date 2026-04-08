@@ -1,0 +1,208 @@
+#include <Adafruit_NeoPixel.h>
+
+#define NUM_STRIPS 5
+#define NUMPIXELS 5
+#define BRIGHTNESS 100
+
+const int PINS[NUM_STRIPS] = {3, 4, 5, 6, 7};
+const int PinButton = 2; // Pin del pulsante
+
+int ultimoStatoPulsante = HIGH; // Variabile per tracciare lo stato precedente del pulsante
+int s = 0; // <--- SPOSTATA QUI! Ora è una variabile globale che mantiene il suo valore.
+
+Adafruit_NeoPixel strips[NUM_STRIPS] = {
+  Adafruit_NeoPixel(NUMPIXELS, PINS[0], NEO_GRB + NEO_KHZ800),
+  Adafruit_NeoPixel(NUMPIXELS, PINS[1], NEO_GRB + NEO_KHZ800),
+  Adafruit_NeoPixel(NUMPIXELS, PINS[2], NEO_GRB + NEO_KHZ800),
+  Adafruit_NeoPixel(NUMPIXELS, PINS[3], NEO_GRB + NEO_KHZ800),
+  Adafruit_NeoPixel(NUMPIXELS, PINS[4], NEO_GRB + NEO_KHZ800)
+};
+
+// %--------------------------------------------------------------%
+// --% Funzione che "traduce" le lettere nei colori di NeoPixel %--
+// %--------------------------------------------------------------%
+
+uint32_t decodificaColore(char lettera, int indiceStriscia) {
+  switch(lettera) {
+    case 'R': 
+      return strips[indiceStriscia].Color(255, 0, 0);      // Rosso pieno
+    case 'W': 
+      return strips[indiceStriscia].Color(255, 255, 255);  // Bianco
+    case 'B': 
+      return strips[indiceStriscia].Color(0, 0, 50);       // Blu scuro
+    case 'G': 
+      return strips[indiceStriscia].Color(255, 180, 0);    // Giallo
+    case 'V': 
+      return strips[indiceStriscia].Color(0, 255, 0);    // verde
+    case 'N': 
+      return strips[indiceStriscia].Color(0, 0, 0);        // Nero / Spento
+    default:  
+      return strips[indiceStriscia].Color(0, 0, 0);        // Sicurezza
+  }
+}
+
+// ==========================================
+// 🎨 I TUOI DISEGNI
+// ==========================================
+
+char disegno0[NUM_STRIPS][NUMPIXELS] = {//tutto nero
+  {'N', 'N', 'N', 'N', 'N'}, // Striscia 1 (Pin 3)
+  {'N', 'N', 'N', 'N', 'N'}, // Striscia 2 (Pin 4)
+  {'N', 'N', 'N', 'N', 'N'}, // Striscia 3 (Pin 5)
+  {'N', 'N', 'N', 'N', 'N'}, // Striscia 4 (Pin 6)
+  {'N', 'N', 'N', 'N', 'N'}  // Striscia 5 (Pin 7)
+};
+
+char disegno1[NUM_STRIPS][NUMPIXELS] = {//solo muri
+  {'R', 'N', 'N', 'N', 'N'}, // Striscia 1 (Pin 3)
+  {'R', 'N', 'R', 'N', 'R'}, // Striscia 2 (Pin 4)
+  {'N', 'N', 'N', 'R', 'N'}, // Striscia 3 (Pin 5)
+  {'N', 'R', 'N', 'N', 'N'}, // Striscia 4 (Pin 6)
+  {'N', 'N', 'R', 'R', 'N'}  // Striscia 5 (Pin 7)
+};
+
+char disegno2[NUM_STRIPS][NUMPIXELS] = {//muri e strada
+  {'R', 'W', 'W', 'W', 'W'}, // Striscia 1 (Pin 3)
+  {'R', 'W', 'R', 'W', 'R'}, // Striscia 2 (Pin 4)
+  {'W', 'W', 'N', 'R', 'W'}, // Striscia 3 (Pin 5)
+  {'W', 'R', 'W', 'W', 'W'}, // Striscia 4 (Pin 6)
+  {'W', 'W', 'R', 'R', 'W'}  // Striscia 5 (Pin 7)
+};
+
+char disegno3[NUM_STRIPS][NUMPIXELS] = {//muri strada e centro
+  {'R', 'W', 'W', 'W', 'W'}, // Striscia 1 (Pin 3)
+  {'R', 'W', 'R', 'W', 'R'}, // Striscia 2 (Pin 4)
+  {'W', 'W', 'B', 'R', 'W'}, // Striscia 3 (Pin 5)
+  {'W', 'R', 'W', 'W', 'W'}, // Striscia 4 (Pin 6)
+  {'W', 'W', 'R', 'R', 'W'}  // Striscia 5 (Pin 7)
+};
+
+char disegno4[NUM_STRIPS][NUMPIXELS] = {//muri strada centro e special
+  {'R', 'W', 'W', 'W', 'W'}, // Striscia 1 (Pin 3)
+  {'R', 'W', 'R', 'W', 'R'}, // Striscia 2 (Pin 4)
+  {'W', 'W', 'B', 'R', 'W'}, // Striscia 3 (Pin 5)
+  {'W', 'R', 'W', 'W', 'G'}, // Striscia 4 (Pin 6)
+  {'W', 'W', 'R', 'R', 'W'}  // Striscia 5 (Pin 7)
+};
+
+char disegno5[NUM_STRIPS][NUMPIXELS] = {//muri strada centro e bonus
+  {'R', 'W', 'W', 'W', 'W'}, // Striscia 1 (Pin 3)
+  {'R', 'W', 'R', 'W', 'R'}, // Striscia 2 (Pin 4)
+  {'W', 'W', 'B', 'R', 'W'}, // Striscia 3 (Pin 5)
+  {'W', 'R', 'W', 'W', 'V'}, // Striscia 4 (Pin 6)
+  {'W', 'W', 'R', 'R', 'W'}  // Striscia 5 (Pin 7)
+};
+
+// ==========================================
+
+void setup() {
+  Serial.begin(9600); // Inizializza il monitor seriale
+  pinMode(PinButton, INPUT_PULLUP); // Imposta il pin del pulsante una volta sola
+
+  for(int i = 0; i < NUM_STRIPS; i++) {
+    strips[i].begin();
+    strips[i].setBrightness(BRIGHTNESS);
+    strips[i].clear();
+    strips[i].show();
+  }
+}
+
+void loop() {
+  // 1. Leggiamo lo stato attuale del pin
+  int statoPulsanteAttuale = digitalRead(PinButton);
+
+  // 2. Controlliamo se è stato appena premuto (passaggio da HIGH a LOW)
+  if (ultimoStatoPulsante == HIGH && statoPulsanteAttuale == LOW) { 
+    s++; // Cambia il disegno
+    delay(50); // Debounce per evitare false doppie letture
+    if(s >= 6){ // Usare >= è un po' più sicuro di ==
+      s = 0;
+    }
+  }
+  
+  // 3. Aggiorniamo l'ultimo stato per il prossimo ciclo
+  ultimoStatoPulsante = statoPulsanteAttuale;
+
+  // 4. Mostriamo il disegno in base alla variabile 's'
+  if (s == 0) {
+    Serial.println("Disegno 0");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno0[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  } 
+  else if(s == 1){
+    Serial.println("Disegno 1");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno1[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  }
+  else if(s == 2){
+    Serial.println("Disegno 2");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno2[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  }
+  else if(s == 3){
+    Serial.println("Disegno 3");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno3[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  }
+  else if(s == 4){
+    Serial.println("Disegno 4");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno4[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  }
+else if(s == 5){
+    Serial.println("Disegno 5");
+    for(int riga = 0; riga < NUM_STRIPS; riga++) 
+    {
+      for(int colonna = 0; colonna < NUMPIXELS; colonna++) 
+      {
+        char letteraColore = disegno5[riga][colonna]; 
+        uint32_t coloreReale = decodificaColore(letteraColore, riga); 
+        strips[riga].setPixelColor(colonna, coloreReale);
+      }
+      strips[riga].show();
+    }
+  }
+  
+  // Un piccolo delay generale aiuta la stabilità del loop
+  delay(10);
+}
