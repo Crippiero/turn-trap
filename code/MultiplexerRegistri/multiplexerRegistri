@@ -1,18 +1,22 @@
-/*  %--------------------------------------------------%  */
+/*  %-----------------------------------------------------------------------%  */
+/*   RILEVAZIONE POSIZIONE DI MAX 4 MAGNETI CON I REGISTRI - (no MuxControl)  */
+/*  %-----------------------------------------------------------------------%  */
 
-/*  RILEVAZIONE MAGNETI CON I REGISTRI - (no MuxControl)  */
-
-/*  %--------------------------------------------------%  */
-
-const uint8_t CHANNEL = 11;
-const uint8_t ROWS = 11;
+const uint8_t CHANNEL = 10;
+const uint8_t ROWS = 1;
 const uint8_t READINGS_DELAY = 1;
-const uint16_t RANGE = 50;
+const uint16_t LOOP_DELAY = 300;
+const uint16_t RANGE = 50; //valore necessario per scartare il rumore
 
-//Per contenere le coordinate dei punti
-struct Point {
-    int8_t x, y;
-};
+//struttura per ricordare il podio dei valori misurati
+struct Podium {
+  uint8_t x, y;
+  uint16_t intensity;
+}
+Podium podiumValue[4];
+
+// Contiene il valore a riposo di ogni sensore per usarlo come punto zero
+uint16_t sensorBaseline[ROWS][CHANNEL];
 
 /*
   OUTPUT PINS TO SELECT THE MUX'S CHANNEL 
@@ -27,12 +31,17 @@ struct Point {
     SIG = A0 => PORTC
 */
 
-// %---------------------------------------------------------------------------------------------------------------------%
-//  ATTENZIONE la matrice cosi occupa 242 byte di memoria e l'Arduino Uno ne ha 2048 byte a disposizione per le variabili
-// %---------------------------------------------------------------------------------------------------------------------%
-void FullAnalogRead(uint16_t muxValues[ROWS][CHANNEL]){
+void magnetDetection(){
+  //Pulisco il podio per non avere fantasmi dalla vecchia misurazione
+  for(uint8_t k = 0; k < 4; k++) {
+    podiumValue[k].x = 0;
+    podiumValue[k].y = 0;
+    podiumValue[k].intensity = 0;
+  }
+
+  uint16_t reading;
   // Ciclo esterno: scorro le righe (MUX Master) tramite PORTB
-  for(byte j = 0; i < ROWS; i++){
+  for(byte j = 0; j < ROWS; j++){
     // Azzero i primi 4 bit di PORTB (pin 8, 9, 10, 11)
     PORTB &= ~0b00001111;
     // Scrivo l'indice della riga sui pin 8-11
@@ -49,15 +58,83 @@ void FullAnalogRead(uint16_t muxValues[ROWS][CHANNEL]){
       //Delay per evitare letture di canali sovrapposti
       delayMicroseconds(READINGS_DELAY);
 
-      //dubby read => per scaricare il condensatore Sample & Hold del ADC (analog - digital converter)
+      //Dubby read => per scaricare il condensatore Sample & Hold del ADC (analog - digital converter)
       analogRead(A0);
-      muxValues[j][i] = analogRead(A0);
+      reading = analogRead(A0);
+
+      // Prendo il valore a riposo specifico del sensore ATTUALE
+      uint16_t baseline = sensorBaseline[j][i];
+
+       /*
+          Calcolo l'intensità assoluta (distanza dal valore di riposo baseline calcolato nel setup)
+          Si usa l'operatore ternario, funziona come un if / elese, e significa, assumendo baseline=512:
+          
+          if (reading > 512)
+            intensity = reading - 512
+          else
+            intensity = 512 - reading
+
+          è come fare =  intensity=ABS(intensity) dopo la sottrazione
+        */
+        uint16_t intensity = (reading > baseline) ? (reading - baseline) : (baseline - reading);
+
+      /*--% Per liberare la memoria mi salvo solo un podio dei 4 (possibili) valori maggiori %--*/
+
+      //Se i valori rientrano in un range (quindi c'è il magnete) lo salvo nella struttua podiumValue
+      if(intensity > RANGE) {
+        /*
+          Essendo podiumValue un podio, in posizione 3, ci sarà il valore minore.
+          se un valore è minore di podiumValue[3] allora per forza è minore degli altri valori
+        */
+        if (intensity > podiumValue[3].intensity) {
+          /*--% Metto il valore nella posizione corretta in ordine di dimensione dell'intensità (lontananza da baseline) %--*/
+          // visto che è entrato nell'if intensity è maggiore di del valore in posizione 3, quindi controllo a partire da pos = 3
+          int8_t pos = 3;
+          while (pos > 0 && intensity > podiumValue[pos - 1].intensity) { 
+            pos--; 
+          }
+          //Adesso pos indica la posizione corretta del valore che devo inserire
+          // Faccio scorrere i valori più piccoli verso il basso, per fare spazio al mio valore nuovo
+          for (int8_t k = 3; k > pos; k--) { 
+            podiumValue[k] = podiumValue[k - 1]; 
+          }
+          
+          // Inserisco il nuovo magnete al posto giusto, che ho appena liberato
+          podiumValue[pos].x = i;
+          podiumValue[pos].y = j;
+          podiumValue[pos].intensity = intensity;
+        }
+      }
     }
   }
 }
 
+//calcolo una media dei valori per considerarlo come posizione 0 (ovvero misurazione senza magneti)
+void calibrateSensors() {
+  Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+  
+  for(byte j = 0; j < ROWS; j++) {
+    PORTB &= ~0b00001111;
+    PORTB |= j;
+
+    for(byte i = 0; i < CHANNEL; i++) {
+      PORTD &= ~0b00111100;
+      PORTD |= (i << 2);
+      delayMicroseconds(READINGS_DELAY);
+      
+      // Faccio una media di 4 letture per avere una base super stabile
+      uint32_t sum = 0;
+      for(byte n = 0; n < 4; n++) {
+        analogRead(A0); // Dummy
+        sum += analogRead(A0);
+      }
+      sensorBaseline[j][i] = sum / 4; 
+    }
+  }
+  Serial.println("Calibrazione completata!");
+}
+
 void setup() {
-  Serial.begin(9600);
   //  |=    =>  è l'operatore OR, dove lascio zero, rimane come gia impostato, dove metto 1 lascia 1
   //  &= ~  =>  è l'opreatore AND NOT quindi dove metto uno a prescindere da cosa c'era mette 0
   //Imposto i pin 2, 3, 4 e 5 come OUTPUT
@@ -66,19 +143,32 @@ void setup() {
   DDRB |= 0b00001111;
   //Imposto il pin A0 come INPUT
   DDRC &= ~0b00000001;
+
+  Serial.begin(9600);
+
+  //riempio sensorBaseline con il valore di base per quello specifico sensore
+  calibrateSensors();
 }
 
 void loop() {
-  uint16_t muxReadings[CHANNEL][ROWS];
-  FullAnalogRead(muxReadings);
+  magnetDetection();
 
-  for (uint8_t j = 0; j < ROWS; j++) {
-    for (uint8_t i = 0; i < CHANNEL; i++){
-      if(muxReadings[j][i] < (512 - RANGE) || muxReadings[j][i] > (512 + RANGE))
-      {
-        //li aggiungo a una lista dove mi salvo i 4 > (se ne esiste 4)
-      }
-    }
+  // STAMPA DI DEBUG
+  // Controllo quali posti del podio sono occupati
+  for (uint8_t k = 0; k < 4; k++) {
+    if (podiumValue[k].intensity > 0) {
+      Serial.print("Magnete ");
+      Serial.print(k);
+      Serial.print(" in: X=");
+      Serial.print(podiumValue[k].x);
+      Serial.print(" Y=");
+      Serial.print(podiumValue[k].y);
+      Serial.print(" (Forza: ");
+      Serial.print(podiumValue[k].intensity);
+      Serial.println(")");
+    } 
+    else { break; }
   }
-
+  Serial.println("---");
+  delay(LOOP_DELAY);
 }
