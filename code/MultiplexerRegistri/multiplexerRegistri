@@ -5,14 +5,15 @@
 const uint8_t CHANNEL = 10;
 const uint8_t ROWS = 1;
 const uint8_t READINGS_DELAY = 1;
-const uint16_t LOOP_DELAY = 300;
+const uint16_t LOOP_DELAY = 700;
 const uint16_t RANGE = 50; //valore necessario per scartare il rumore
 
 //struttura per ricordare il podio dei valori misurati
 struct Podium {
   uint8_t x, y;
   uint16_t intensity;
-}
+};
+
 Podium podiumValue[4];
 
 // Contiene il valore a riposo di ogni sensore per usarlo come punto zero
@@ -24,7 +25,8 @@ uint16_t sensorBaseline[ROWS][CHANNEL];
     S1 = 3   => PORTD (Bit 3)
     S2 = 4   => PORTD (Bit 4)
     S3 = 5   => PORTD (Bit 5)
-    S4 = 8   => PORTB (Bit 0) - Seleziona la riga (Mux Master)
+                               <- Seleziona la riga (Mux Master)
+    S4 = 8   => PORTB (Bit 0)
     S5 = 9   => PORTB (Bit 1)
     S6 = 10  => PORTB (Bit 2)
     S7 = 11  => PORTB (Bit 3)
