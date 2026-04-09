@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
-const uint8_t CHANNEL = 10;
-const uint8_t ROWS = 10; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
+const uint8_t CHANNEL = 11;
+const uint8_t ROWS = 11; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
 
 const int8_t RESOLUTION = 1;
 const uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
@@ -13,10 +13,16 @@ const char WALL = '#';
 const char EMPTY = 'x';
 const char GOAL = 'G';
 
+const int8_t PIN_BTN = 12;
+const int8_t PIN_BTN_RESET = 13;
+
+
 const int8_t PIN = 6;
 const uint16_t NUMPIXELS = ROWS * PHYS_COLS;
 
-const uint16_t LOOP_DELAY = 3000;
+const uint16_t LOOP_DELAY = 10;
+const uint16_t PRESS_DELAY = 300;
+const uint16_t SETUP_DELAY = 30;
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -273,8 +279,6 @@ void magnetDetection(){
 
 //calcolo una media dei valori per considerarlo come posizione 0 (ovvero misurazione senza magneti)
 void calibrateSensors() {
-  Serial.println("Calibrazione in corso... NON avvicinare magneti!");
-  
   for(byte j = 0; j < ROWS; j++) {
     PORTB &= ~0b00001111;
     PORTB |= j;
@@ -293,14 +297,19 @@ void calibrateSensors() {
       sensorBaseline[j][i] = sum / 4; 
     }
   }
-  Serial.println("Calibrazione completata!");
 }
 
 // --- SETUP E LOOP ARDUINO ---
 
 void setup() {
     Serial.begin(9600);
+    Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+
+    delay(SETUP_DELAY);
+
     randomSeed(analogRead(A2));
+    pinMode(PIN_BTN, INPUT_PULLUP);
+    pinMode(PIN_BTN_RESET, INPUT_PULLUP);
 
     //  |=    =>  è l'operatore OR, dove lascio zero, rimane come gia impostato, dove metto 1 lascia 1
     //  &= ~  =>  è l'opreatore AND NOT quindi dove metto uno a prescindere da cosa c'era mette 0
@@ -314,18 +323,21 @@ void setup() {
     strip.begin();
     
     // Pre-calcoliamo i colori una volta sola all'avvio!
-    colorWall   = strip.Color(0, 0, 0);       // Spento
-    colorEmpty  = strip.Color(30, 30, 30);    // Bianco debole
-    colorGoal   = strip.Color(0, 255, 0);     // Verde
+    colorWall   = strip.Color(255, 0, 0);       // Rosso
+    colorEmpty  = strip.Color(180, 160, 180);    // Bianco debole
+    colorGoal   = strip.Color(0, 0, 50);     // Blu
 
     strip.clear();
     strip.show();
 
     //riempio sensorBaseline con il valore di base per quello specifico sensore
     calibrateSensors();
+    Serial.println("Calibrazione completata!");
 }
 
 void loop() {
+  if (digitalRead(PIN_BTN) == LOW){
+    delay(200);
     //Cerco i magneti
     magnetDetection();
 
@@ -346,13 +358,34 @@ void loop() {
         else { break; }
     }
 
-    Serial.println("%------------%");
-
     //deve controllare se esite il punto (è diverso da 0)
     player1 = {podiumValue[0].x, podiumValue[0].y};
     player2 = {podiumValue[1].x, podiumValue[1].y};
     player3 = {podiumValue[2].x, podiumValue[2].y};
     player4 = {podiumValue[3].x, podiumValue[3].y};
     renderNewMaze(player1, player2, player3, player4);
-    delay(LOOP_DELAY);
+    delay(PRESS_DELAY);
+  }
+
+  if (digitalRead(PIN_BTN_RESET) == LOW){
+    Serial.println("Inizio Partita!!!");
+    delay(500);
+    Serial.println("Per iniziare rimuovere TUTTE le pedine e ripremere il tasto SETUP.");
+    delay(700);
+    if (digitalRead(PIN_BTN_RESET) == LOW){
+      Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+
+      randomSeed(analogRead(A2));
+
+      strip.clear();
+      strip.show();
+
+      calibrateSensors();
+
+      Serial.println("Calibrazione completata!");
+      delay(PRESS_DELAY);
+    }
+    Serial.println("Posizionare le pedine agli angoli della partita e premere START");
+  }
+  delay(LOOP_DELAY);
 }
