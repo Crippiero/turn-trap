@@ -1,7 +1,10 @@
 #include <Adafruit_NeoPixel.h>
 
 const uint8_t CHANNEL = 10;
-const uint8_t ROWS = 1;
+const uint8_t ROWS = 10; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
+
+const int8_t RESOLUTION = 1;
+const uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
 
 const uint8_t READINGS_DELAY = 1;
 const uint16_t RANGE = 50; //valore necessario per scartare il rumore
@@ -11,9 +14,9 @@ const char EMPTY = 'x';
 const char GOAL = 'G';
 
 const int8_t PIN = 6;
-const uint16_t NUMPIXELS = ROWS * CHANNEL;
+const uint16_t NUMPIXELS = ROWS * PHYS_COLS;
 
-const uint16_t LOOP_DELAY = 700;
+const uint16_t LOOP_DELAY = 3000;
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -113,69 +116,67 @@ void connectPlayerToMaze(int8_t posX, int8_t posY/*, char playerSymbol*/) {
     }
 }
 
-void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {
-    /*-- 1. Reset della matrice a solo MURI --*/
-    for (int8_t i = 0; i < ROWS; i++) {
-        for (int8_t j = 0; j < CHANNEL; j++) {
-            maze[i][j] = WALL;
+void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
+  /*-- 1. Reset della matrice a solo MURI --*/
+  for (int8_t i = 0; i < ROWS; i++) {
+      for (int8_t j = 0; j < CHANNEL; j++) {
+          maze[i][j] = WALL;
+      }
+  }
+
+  /*-- 2. Genera scavando nei muri --*/
+  //Partenza dal centro
+  int8_t startX = (ROWS - 1) / 2;
+  int8_t startY = (CHANNEL - 1) / 2;
+  generateMazeDFS(startX, startY);
+  maze[startX][startY] = GOAL;
+
+  // 3. Piazza i giocatori
+  if (pl1.x != -1 && pl1.y != -1) connectPlayerToMaze(pl1.x, pl1.y);
+  if (pl2.x != -1 && pl2.y != -1) connectPlayerToMaze(pl2.x, pl2.y);
+  if (pl3.x != -1 && pl3.y != -1) connectPlayerToMaze(pl3.x, pl3.y);
+  if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y);
+
+  // 4. Stampa su led neopixel
+  Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
+  
+  // Non serve usare strip.clear(), sovrascriviamo direttamente tutti i LED
+  for(uint8_t i = 0; i < ROWS; i++) {
+    for(uint8_t j = 0; j < CHANNEL; j++) {
+        
+      // Decidiamo il colore una volta sola per questa cella logica
+      char cell = maze[i][j];
+      uint32_t targetColor = colorWall;
+      
+      if(cell == EMPTY){
+          targetColor = colorEmpty;
+      }   
+      else if(cell == GOAL){
+          targetColor = colorGoal;
+      }
+
+      // Moltiplichiamo il LED orizzontalmente in base a RESOLUTION
+      for (uint8_t k = 0; k < RESOLUTION; k++) {
+        uint16_t pixelIndex;
+        
+        // Calcolo serpentina basato sulle colonne FISICHE
+        if ((i & 1) == 0) {
+          // Riga pari: sinistra -> destra
+          // Partiamo dall'inizio del blocco della cella (j * RESOLUTION) e sommiamo k
+          pixelIndex = (i * PHYS_COLS) + (j * RESOLUTION) + k;
+        } else {    
+          // Riga dispari: destra -> sinistra
+          // Partiamo dalla fine della riga e sottraiamo l'avanzamento
+          pixelIndex = (i * PHYS_COLS) + (PHYS_COLS - 1) - ((j * RESOLUTION) + k);
         }
+        strip.setPixelColor(pixelIndex, targetColor);
+      }
+      Serial.print(cell);
+      Serial.print(" ");
     }
-
-    /*-- 2. Genera scavando nei muri --*/
-    //Partenza dal centro
-    int8_t startX = (ROWS - 1) / 2;
-    int8_t startY = (CHANNEL - 1) / 2;
-    generateMazeDFS(startX, startY);
-    maze[startX][startY] = GOAL;
-
-    // 3. Piazza i giocatori
-    if (pl1.x != -1 && pl1.y != -1) connectPlayerToMaze(pl1.x, pl1.y, '1');
-    if (pl2.x != -1 && pl2.y != -1) connectPlayerToMaze(pl2.x, pl2.y, '2');
-    if (pl3.x != -1 && pl3.y != -1) connectPlayerToMaze(pl3.x, pl3.y, '3');
-    if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y, '4');
-
-    // 4. Stampa su led neopixel
-    Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
-    
-    // Non serve usare strip.clear(), sovrascriviamo direttamente tutti i LED
-    for(uint8_t i = 0; i < ROWS; i++) {
-        for(uint8_t j = 0; j < CHANNEL; j++) {
-            
-            uint16_t pixelIndex;
-            
-            //Calcolo serpentina con bitwise (& 1) invece di modulo (% 2) per capire se sono pari o dispari pk in binario 10 (2) è pari pk finisce con 0 11 (3) è dispari pk finisce con 1
-            if ((i & 1) == 0) {
-                // Riga pari: sinistra -> destra
-                pixelIndex = (i * CHANNEL) + j;
-            } else {    
-                // Riga dispari: destra -> sinistra
-                pixelIndex = (i * CHANNEL) + (CHANNEL - 1 - j);
-            }
-            
-            //Assegnazione diretta dei colori pre-calcolati
-            char cell = maze[i][j];
-            if(cell == WALL){
-                strip.setPixelColor(pixelIndex, colorWall);
-            }
-            else if(cell == EMPTY){
-                strip.setPixelColor(pixelIndex, colorEmpty);
-            }   
-            else if(cell == GOAL){
-                strip.setPixelColor(pixelIndex, colorGoal);
-            }
-            /*
-            Non mi serve piu, il giocatore è dello stesso colore del pavimento
-            else if(cell >= '1' && cell <= '4'){
-                strip.setPixelColor(pixelIndex, colorPlayer);
-            }
-            */
-
-            Serial.print(cell);
-            Serial.print(" ");
-        }
-        Serial.println();
-    }
-    strip.show();
+    Serial.println();
+  }
+  strip.show();
 }
 
 /*
@@ -261,8 +262,8 @@ void magnetDetection(){
           }
           
           // Inserisco il nuovo magnete al posto giusto, che ho appena liberato
-          podiumValue[pos].x = i;
-          podiumValue[pos].y = j;
+          podiumValue[pos].x = j; //ROWS
+          podiumValue[pos].y = i; //CHANNEL
           podiumValue[pos].intensity = intensity;
         }
       }
@@ -330,7 +331,7 @@ void loop() {
 
     Serial.println("%------------%");
     for (uint8_t k = 0; k < 4; k++) {
-        if (podiumValue[k].intensity > -1) {
+        if (podiumValue[k].intensity > 0) {
             //Stampe di debug
             Serial.print("Magnete ");
             Serial.print(k);
