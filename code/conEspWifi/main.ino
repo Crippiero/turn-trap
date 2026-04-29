@@ -368,12 +368,18 @@ void loop() {
               } 
               else { break; }
           }
+          player1 = {-1, -1};
+          player2 = {-1, -1};
+          player3 = {-1, -1};
+          player4 = {-1, -1};
 
           // Controllo se il punto esiste (intensità > 0) prima di aggiornare i player
           if (podiumValue[0].intensity > 0) player1 = {podiumValue[0].x, podiumValue[0].y};
           if (podiumValue[1].intensity > 0) player2 = {podiumValue[1].x, podiumValue[1].y};
           if (podiumValue[2].intensity > 0) player3 = {podiumValue[2].x, podiumValue[2].y};
           if (podiumValue[3].intensity > 0) player4 = {podiumValue[3].x, podiumValue[3].y};
+                    
+          renderNewMaze(player1, player2, player3, player4);
           
           renderNewMaze(player1, player2, player3, player4);
           delay(PRESS_DELAY);
