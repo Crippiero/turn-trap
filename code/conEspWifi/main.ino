@@ -13,10 +13,6 @@ const char WALL = '#';
 const char EMPTY = 'x';
 const char GOAL = 'G';
 
-const int8_t PIN_BTN = 12;
-const int8_t PIN_BTN_RESET = 13;
-
-
 const int8_t PIN = 12;
 const uint16_t NUMPIXELS = ROWS * PHYS_COLS;
 
@@ -308,8 +304,6 @@ void setup() {
     delay(SETUP_DELAY);
 
     randomSeed(analogRead(A2));
-    pinMode(PIN_BTN, INPUT_PULLUP);
-    pinMode(PIN_BTN_RESET, INPUT_PULLUP);
 
     //  |=    =>  è l'operatore OR, dove lascio zero, rimane come gia impostato, dove metto 1 lascia 1
     //  &= ~  =>  è l'opreatore AND NOT quindi dove metto uno a prescindere da cosa c'era mette 0
@@ -336,7 +330,7 @@ void setup() {
 }
 
 void loop() {
-  if (digitalRead(PIN_BTN) == LOW){
+  if (/*legge dalla seriale*/){
     delay(200);
     //Cerco i magneti
     magnetDetection();
@@ -367,7 +361,7 @@ void loop() {
     delay(PRESS_DELAY);
   }
 
-  if (digitalRead(PIN_BTN_RESET) == LOW){
+  if (/*legge dalla seriale*/){
     Serial.println("Inizio Partita!!!");
     delay(500);
     Serial.println("Per iniziare rimuovere TUTTE le pedine e ripremere il tasto SETUP.");
