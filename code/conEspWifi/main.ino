@@ -20,12 +20,9 @@ constexpr uint16_t LOOP_DELAY = 10;
 constexpr uint16_t PRESS_DELAY = 300;
 constexpr uint16_t SETUP_DELAY = 30;
 
-constexpr uint8_t START_BYTE 0xAA
-
-enum Command {
-  CMD_START = 0x01,
-  CMD_RESET = 0x02
-};
+constexpr uint8_t SERIAL_START_BYTE = 0xAA;
+constexpr uint8_t CMD_START = 0x01;
+constexpr uint8_t CMD_RESET = 0x02;
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
