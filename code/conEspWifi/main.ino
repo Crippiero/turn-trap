@@ -1,24 +1,31 @@
 #include <Adafruit_NeoPixel.h>
 
-const uint8_t CHANNEL = 11;
-const uint8_t ROWS = 11; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
+constexpr uint8_t CHANNEL = 11;
+constexpr uint8_t ROWS = 11; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
 
-const int8_t RESOLUTION = 1;
-const uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
+constexpr int8_t RESOLUTION = 1;
+constexpr uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
 
-const uint8_t READINGS_DELAY = 1;
-const uint16_t RANGE = 50; //valore necessario per scartare il rumore
+constexpr uint8_t READINGS_DELAY = 1;
+constexpr uint16_t RANGE = 50; //valore necessario per scartare il rumore
 
-const char WALL = '#';
-const char EMPTY = 'x';
-const char GOAL = 'G';
+constexpr char WALL = '#';
+constexpr char EMPTY = 'x';
+constexpr char GOAL = 'G';
 
-const int8_t PIN = 12;
-const uint16_t NUMPIXELS = ROWS * PHYS_COLS;
+constexpr int8_t PIN = 12;
+constexpr uint16_t NUMPIXELS = ROWS * PHYS_COLS;
 
-const uint16_t LOOP_DELAY = 10;
-const uint16_t PRESS_DELAY = 300;
-const uint16_t SETUP_DELAY = 30;
+constexpr uint16_t LOOP_DELAY = 10;
+constexpr uint16_t PRESS_DELAY = 300;
+constexpr uint16_t SETUP_DELAY = 30;
+
+constexpr uint8_t START_BYTE 0xAA
+
+enum Command {
+  CMD_START = 0x01,
+  CMD_RESET = 0x02
+};
 
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
