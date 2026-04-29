@@ -17,7 +17,7 @@ const int8_t PIN_BTN = 12;
 const int8_t PIN_BTN_RESET = 13;
 
 
-const int8_t PIN = 11;
+const int8_t PIN = 12;
 const uint16_t NUMPIXELS = ROWS * PHYS_COLS;
 
 const uint16_t LOOP_DELAY = 10;
