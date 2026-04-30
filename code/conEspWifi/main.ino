@@ -92,15 +92,13 @@ void generateMazeDFS(int8_t row, int8_t col) {
   }
 }
 
-// Assicurati che ROWS e COLS siano definiti in base alla grandezza del tuo labirinto
-// e che EMPTY e WALL siano correttamente definiti.
 void addOpenBorders() {
   int8_t chanceToOpenInner = 15; // 15% di probabilità di rompere un muro interno
   int8_t chanceToOpenBorder = 30; // 30% di probabilità di aprire un muro sul bordo
 
   // --- Strade in piu ---
   for (int8_t r = 1; r < ROWS - 1; r++) {
-    for (int8_t c = 1; c < COLS - 1; c++) {
+    for (int8_t c = 1; c < CHANNEL - 1; c++) {
       if (maze[r][c] == WALL) {
         // Controlliamo se questo muro separa due celle vuote (in orizzontale o verticale)
         bool horizontalPass = (maze[r][c-1] == EMPTY && maze[r][c+1] == EMPTY);
@@ -117,11 +115,11 @@ void addOpenBorders() {
   // --- EFFETTO MURI ESTERNI APERTI ---
   for (int8_t r = 0; r < ROWS; r++) {
     if (random(100) < chanceToOpenBorder) maze[r][0] = EMPTY;        // Bordo sinistro
-    if (random(100) < chanceToOpenBorder) maze[r][COLS-1] = EMPTY;   // Bordo destro
+    if (random(100) < chanceToOpenBorder) maze[r][CHANNEL-1] = EMPTY;   // Bordo destro
   }
   
   // Apriamo dei varchi sui bordi orizzontali (sopra e sotto)
-  for (int8_t c = 0; c < COLS; c++) {
+  for (int8_t c = 0; c < CHANNEL; c++) {
     if (random(100) < chanceToOpenBorder) maze[0][c] = EMPTY;        // Bordo superiore
     if (random(100) < chanceToOpenBorder) maze[ROWS-1][c] = EMPTY;   // Bordo inferiore
   }
