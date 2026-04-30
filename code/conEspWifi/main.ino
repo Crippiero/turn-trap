@@ -101,16 +101,19 @@ void connectPlayerToMaze(int8_t posX, int8_t posY/*, char playerSymbol*/) {
   bool connected = false;
 
   //Controllo se è connesso
-  for(int8_t i=0; i<4; i++) {
+  for(int8_t i=0; i<4; i++) 
+  {
     int8_t neighborX = posX + deltaX[i];
     int8_t neighborY = posY + deltaY[i];
-    if (neighborX >= 0 && neighborX < ROWS && neighborY >= 0 && neighborY < CHANNEL) {
+    if (neighborX >= 0 && neighborX < ROWS && neighborY >= 0 && neighborY < CHANNEL) 
+    {
       if (maze[neighborX][neighborY] != WALL) connected = true;
     }
   }
 
-    //Se non è connesso:
-  if (!connected) {
+  //Se non è connesso:
+  if (!connected) 
+  {
     int8_t centerX = ROWS / 2;
     int8_t centerY = CHANNEL / 2;
     int8_t stepX = (centerX > posX) ? 1 : ((centerX < posX) ? -1 : 0);
