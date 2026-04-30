@@ -1,8 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 
 constexpr uint8_t CHANNEL = 11;
-constexpr uint8_t ROWS = 11; //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
+constexpr uint8_t ROWS = 11; 
 
+//quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
 constexpr int8_t RESOLUTION = 1;
 constexpr uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
 
