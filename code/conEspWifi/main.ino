@@ -33,7 +33,7 @@ struct Podium {
 };
 
 struct Point {
-    int8_t x, y;
+  int8_t x, y;
 };
 
 Podium podiumValue[4];
