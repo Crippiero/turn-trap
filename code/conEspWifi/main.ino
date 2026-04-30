@@ -1,3 +1,4 @@
+//Ciao
 #include <Adafruit_NeoPixel.h>
 
 constexpr uint8_t CHANNEL = 11;
