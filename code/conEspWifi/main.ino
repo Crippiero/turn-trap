@@ -50,7 +50,9 @@ Point player4 = {ROWS - 1, 0};
 uint32_t colorWall;
 uint32_t colorEmpty;
 uint32_t colorGoal;
-uint32_t colorPlayer;
+uint32_t colorUnpr;
+uint32_t colorMalus;
+uint32_t colotBonus;
 
 // --- FUNZIONI ---
 
