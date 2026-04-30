@@ -57,73 +57,70 @@ uint32_t colotBonus;
 // --- FUNZIONI ---
 
 bool isValid(int8_t row, int8_t col) {
-    return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1;
+  return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1;
 }
 
 void generateMazeDFS(int8_t row, int8_t col) {
-    maze[row][col] = EMPTY; 
+  maze[row][col] = EMPTY;
 
-    // OTTIMIZZAZIONE 1: Salviamo le direzioni come costanti statiche.
-    // In questo modo Arduino non deve ricreare questi array nella RAM 
-    // ad ogni chiamata ricorsiva, salvando un'enorme quantità di memoria Stack.
-    static const int8_t dirX[] = {-2, 2, 0, 0};
-    static const int8_t dirY[] = {0, 0, -2, 2};
+  static const int8_t dirX[] = {-2, 2, 0, 0};
+  static const int8_t dirY[] = {0, 0, -2, 2};
+  
+  // Solo l'array degli indici deve essere locale per poter essere mischiato
+  int8_t dirs[] = {0, 1, 2, 3};
+
+  // Mescoliamo le direzioni
+  for (int8_t i = 0; i < 4; i++) {
+    int8_t swapIdx = random(4);
+    int8_t temp = dirs[i];
+    dirs[i] = dirs[swapIdx];
+    dirs[swapIdx] = temp;
+  }
+
+  // Proviamo tutte le direzioni nell'ordine nuovo
+  for (int8_t i = 0; i < 4; i++) {
+    int8_t deltaRow = dirX[dirs[i]];
+    int8_t deltaCol = dirY[dirs[i]];
     
-    // Solo l'array degli indici deve essere locale per poter essere mischiato
-    int8_t dirs[] = {0, 1, 2, 3};
-
-    // Mescoliamo le direzioni
-    for (int8_t i = 0; i < 4; i++) {
-        int8_t swapIdx = random(4);
-        int8_t temp = dirs[i];
-        dirs[i] = dirs[swapIdx];
-        dirs[swapIdx] = temp;
+    int8_t nextRow = row + deltaRow;
+    int8_t nextCol = col + deltaCol;
+    
+    if (isValid(nextRow, nextCol) && maze[nextRow][nextCol] == WALL) {
+      maze[row + deltaRow/2][col + deltaCol/2] = EMPTY;
+      generateMazeDFS(nextRow, nextCol);
     }
-
-    // Proviamo tutte le direzioni nell'ordine nuovo
-    for (int8_t i = 0; i < 4; i++) {
-        int8_t deltaRow = dirX[dirs[i]];
-        int8_t deltaCol = dirY[dirs[i]];
-        
-        int8_t nextRow = row + deltaRow;
-        int8_t nextCol = col + deltaCol;
-        
-        if (isValid(nextRow, nextCol) && maze[nextRow][nextCol] == WALL) {
-            maze[row + deltaRow/2][col + deltaCol/2] = EMPTY;
-            generateMazeDFS(nextRow, nextCol);
-        }
-    }
+  }
 }
 
 void connectPlayerToMaze(int8_t posX, int8_t posY/*, char playerSymbol*/) {
-    //maze[posX][posY] = playerSymbol; Commentato cosi non mette un'altro colore dov'è il giocatore
-    maze[posX][posY] = EMPTY;
+  //maze[posX][posY] = playerSymbol; Commentato cosi non mette un'altro colore dov'è il giocatore
+  maze[posX][posY] = EMPTY;
 
-    static const int8_t deltaX[] = {-1, 1, 0, 0};
-    static const int8_t deltaY[] = {0, 0, -1, 1};
-    bool connected = false;
+  static const int8_t deltaX[] = {-1, 1, 0, 0};
+  static const int8_t deltaY[] = {0, 0, -1, 1};
+  bool connected = false;
 
-    //Controllo se è connesso
-    for(int8_t i=0; i<4; i++) {
-        int8_t neighborX = posX + deltaX[i];
-        int8_t neighborY = posY + deltaY[i];
-        if (neighborX >= 0 && neighborX < ROWS && neighborY >= 0 && neighborY < CHANNEL) {
-            if (maze[neighborX][neighborY] != WALL) connected = true;
-        }
+  //Controllo se è connesso
+  for(int8_t i=0; i<4; i++) {
+    int8_t neighborX = posX + deltaX[i];
+    int8_t neighborY = posY + deltaY[i];
+    if (neighborX >= 0 && neighborX < ROWS && neighborY >= 0 && neighborY < CHANNEL) {
+      if (maze[neighborX][neighborY] != WALL) connected = true;
     }
+  }
 
     //Se non è connesso:
-    if (!connected) {
-        int8_t centerX = ROWS / 2;
-        int8_t centerY = CHANNEL / 2;
-        int8_t stepX = (centerX > posX) ? 1 : ((centerX < posX) ? -1 : 0);
-        int8_t stepY = (centerY > posY) ? 1 : ((centerY < posY) ? -1 : 0);
+  if (!connected) {
+    int8_t centerX = ROWS / 2;
+    int8_t centerY = CHANNEL / 2;
+    int8_t stepX = (centerX > posX) ? 1 : ((centerX < posX) ? -1 : 0);
+    int8_t stepY = (centerY > posY) ? 1 : ((centerY < posY) ? -1 : 0);
 
-        if (posX + stepX >= 0 && posX + stepX < ROWS) 
-            maze[posX + stepX][posY] = EMPTY;
-        else if (posY + stepY >= 0 && posY + stepY < CHANNEL)
-            maze[posX][posY + stepY] = EMPTY;
-    }
+    if (posX + stepX >= 0 && posX + stepX < ROWS) 
+      maze[posX + stepX][posY] = EMPTY;
+    else if (posY + stepY >= 0 && posY + stepY < CHANNEL)
+      maze[posX][posY + stepY] = EMPTY;
+ }
 }
 
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
