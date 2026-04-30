@@ -328,6 +328,9 @@ void setup() {
     colorWall   = strip.Color(255, 0, 0);       // Rosso
     colorEmpty  = strip.Color(180, 160, 180);    // Bianco debole
     colorGoal   = strip.Color(0, 0, 50);     // Blu
+    colorUnpr  = strip.Color(255, 255, 0);  //Giallo
+    colorBonus = strip.color(0, 255, 0);    //Verde
+    colorMalus  = strip.Color(255, 0, 220); //Viola
 
     strip.clear();
     strip.show();
