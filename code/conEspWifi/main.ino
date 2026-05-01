@@ -249,28 +249,28 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
   }
   while (true){
     switch (random(4)){
-      case 1:
+      case 0:
         if (pl1.x != -1 && pl1.y != -1) {
           p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
           p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
           return p;
         }
         break;
-      case 2:
+      case 1:
         if (pl2.x != -1 && pl2.y != -1) {
           p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
           p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
           return p;
         }
         break;
-      case 3:
+      case 2:
         if (pl3.x != -1 && pl3.y != -1) {
           p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
           p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
           return p;
         }
         break;
-      case 4:
+      case 3:
         if (pl4.x != -1 && pl4.y != -1) {
           p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
           p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
