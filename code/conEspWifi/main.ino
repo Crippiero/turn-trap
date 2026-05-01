@@ -15,6 +15,7 @@ constexpr uint16_t RANGE = 50; //valore necessario per scartare il rumore
 constexpr char WALL = '#';
 constexpr char EMPTY = 'x';
 constexpr char GOAL = 'G';
+constexpr char UNPR_simbol = 'U';
 
 constexpr int8_t PIN = 12;
 constexpr uint16_t NUMPIXELS = ROWS * PHYS_COLS;
@@ -60,6 +61,11 @@ uint32_t colorBonus;
 
 bool isValid(int8_t row, int8_t col) {
   return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1;
+}
+
+bool isValidinUnpr(int8_t row, int8_t col) {
+  // Ritorna vero se la coordinata è all'interno della mappa (inclusi i bordi 0 e max-1)
+  return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL;
 }
 
 void generateMazeDFS(int8_t row, int8_t col) {
@@ -162,6 +168,58 @@ void connectPlayerToMaze(int8_t posX, int8_t posY/*, char playerSymbol*/) {
  }
 }
 
+//Generiamo i bonus e i malus
+Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
+  Point p = {-1, -1};
+  int8_t x, y;
+  //controllo a vuoto per evitsre un loop infinito
+  if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) {
+    return p; 
+  }
+  while (true){
+    x = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
+    y = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
+    switch (random(4)){
+      case 0:
+        if (pl1.x != -1 && pl1.y != -1) {
+          p.x = pl1.x + x;
+          p.y = pl1.y + y;
+          if (isValidinUnpr(p.x, p.y)){
+            return p;
+          }
+        }
+        break;
+      case 1:
+        if (pl2.x != -1 && pl2.y != -1) {
+          p.x = pl2.x + x;
+          p.y = pl2.y + y;
+          if (isValidinUnpr(p.x, p.y)){
+            return p;
+          }
+        }
+        break;
+      case 2:
+        if (pl3.x != -1 && pl3.y != -1) {
+          p.x = pl3.x + x;
+          p.y = pl3.y + y;
+          if (isValidinUnpr(p.x, p.y)){
+            return p;
+          }
+        }
+        break;
+      case 3:
+        if (pl4.x != -1 && pl4.y != -1) {
+          p.x = pl4.x + x;
+          p.y = pl4.y + y;
+          if (isValidinUnpr(p.x, p.y)){
+            return p;
+          }
+        }
+        break;
+    }
+  }
+}
+
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
   /*-- 1. Reset della matrice a solo MURI --*/
   for (int8_t i = 0; i < ROWS; i++) {
@@ -196,10 +254,10 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
       uint32_t targetColor = colorWall;
       
       if(cell == EMPTY){
-          targetColor = colorEmpty;
+        targetColor = colorEmpty;
       }   
       else if(cell == GOAL){
-          targetColor = colorGoal;
+        targetColor = colorGoal;
       }
 
       // Moltiplichiamo il LED orizzontalmente in base a RESOLUTION
@@ -239,47 +297,6 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     S7 = 11  => PORTB (Bit 3)
     SIG = A0 => PORTC
 */
-
-//Generiamo i bonus e i malus
-Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
-  Point p;
-  //controllo a vuoto per evitsre un loop infinito
-  if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) {
-    return p; 
-  }
-  while (true){
-    switch (random(4)){
-      case 0:
-        if (pl1.x != -1 && pl1.y != -1) {
-          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
-          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
-          return p;
-        }
-        break;
-      case 1:
-        if (pl2.x != -1 && pl2.y != -1) {
-          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
-          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
-          return p;
-        }
-        break;
-      case 2:
-        if (pl3.x != -1 && pl3.y != -1) {
-          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
-          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
-          return p;
-        }
-        break;
-      case 3:
-        if (pl4.x != -1 && pl4.y != -1) {
-          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
-          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
-          return p;
-        }
-        break;
-    }
-  }
-}
 
 void checkUnpr(){
 
