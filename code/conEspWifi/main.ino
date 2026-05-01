@@ -3,6 +3,8 @@
 constexpr uint8_t CHANNEL = 11;
 constexpr uint8_t ROWS = 11; 
 
+constexpr uint8_t UNPR_OFFSET = 2;
+
 //quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
 constexpr int8_t RESOLUTION = 1;
 constexpr uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
@@ -93,6 +95,7 @@ void generateMazeDFS(int8_t row, int8_t col) {
 }
 
 void addOpenBorders() {
+  // da aggiungere una logiva per non creare delle "piazze aperte"
   int8_t chanceToOpenInner = 15; // 15% di probabilità di rompere un muro interno
   int8_t chanceToOpenBorder = 30; // 30% di probabilità di aprire un muro sul bordo
 
@@ -238,8 +241,40 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 */
 
 //Generiamo i bonus e i malus
-void generateUnpr(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
-
+uint8_t generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
+  Point p;
+  while (true){
+    switch (random(4)){
+      case 1:
+        if (pl1.x != -1 && pl1.y != -1) {
+          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
+          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
+          return p;
+        }
+        break;
+      case 2:
+        if (pl2.x != -1 && pl2.y != -1) {
+          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
+          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
+          return p;
+        }
+        break;
+      case 3:
+        if (pl3.x != -1 && pl3.y != -1) {
+          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
+          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
+          return p;
+        }
+        break;
+      case 4:
+        if (pl4.x != -1 && pl4.y != -1) {
+          p.x = random(-UNPR_OFFSET, UNPR_OFFSET);
+          p.y = random(-UNPR_OFFSET, UNPR_OFFSET);
+          return p;
+        }
+        break;
+    }
+  }
 }
 
 void checkUnpr(){
