@@ -243,6 +243,10 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 //Generiamo i bonus e i malus
 Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   Point p;
+  //controllo a vuoto per evitsre un loop infinito
+  if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) {
+    return p; 
+  }
   while (true){
     switch (random(4)){
       case 1:
