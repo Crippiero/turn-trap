@@ -446,7 +446,6 @@ void resetCalibration (uint8_t _delay = 1000){
 
   Serial.println("Calibrazione completata!");
   Serial.println("Posizionare le pedine agli angoli della partita e inviare comando START");
-  delay(PRESS_DELAY);
 }
 
 void gamePlay(){
@@ -463,9 +462,49 @@ void gamePlay(){
     if (podiumValue[1].intensity > 0) player2 = {podiumValue[1].x, podiumValue[1].y};
     if (podiumValue[2].intensity > 0) player3 = {podiumValue[2].x, podiumValue[2].y};
     if (podiumValue[3].intensity > 0) player4 = {podiumValue[3].x, podiumValue[3].y};
-              
-    renderNewMaze(player1, player2, player3, player4);
-    delay(PRESS_DELAY);
+}
+
+void processSerialCommands() {
+  // 1. Clausola di guardia: se non ci sono abbastanza byte, usciamo subito.
+  if (Serial.available() < 4) {
+    return;
+  }
+
+  // 2. Sincronizzazione: se il primo byte non è START, lo scartiamo.
+  if (Serial.peek() != SERIAL_START_BYTE) {
+    Serial.read(); // Rimuove la spazzatura dal buffer
+    return;        // Usciamo per far ripartire il controllo al prossimo giro
+  }
+
+  // 3. Lettura dei dati (sappiamo per certo che il primo byte è START)
+  Serial.read(); // Consumiamo il byte di start
+  uint8_t cmd = Serial.read();
+  uint8_t len = Serial.read();
+  uint8_t chk = Serial.read();
+
+  // 4. Verifica Checksum
+  if (chk != (cmd ^ len)) {
+    Serial.println("Errore: Checksum Seriale non valido!");
+    return; // Interrompiamo l'esecuzione qui se il pacchetto è corrotto
+  }
+
+  // 5. Esecuzione dei comandi tramite switch (più pulito degli if/else)
+  switch (cmd) {
+    case CMD_START:
+      renderNewMaze(player1, player2, player3, player4);
+      delay(PRESS_DELAY);
+      break;
+
+    case CMD_RESET:
+      resetCalibration();
+      delay(PRESS_DELAY);
+      break;
+
+    default:
+      // Opzionale: gestire comandi non riconosciuti
+      Serial.println("Avviso: Comando sconosciuto ignorato.");
+      break;
+  }
 }
 
 // --- SETUP E LOOP ARDUINO ---
@@ -506,36 +545,9 @@ void setup() {
 }
 
 void loop() {
-  // --- LETTURA E PARSING DELLA SERIALE ---
-  // Aspettiamo che ci siano almeno 4 byte nel buffer (START, CMD, LEN, CHK)
-  if (Serial.available() >= 4) {
-    
-    // Controlliamo se il primo byte è quello di START
-    if (Serial.peek() == SERIAL_START_BYTE) {
-      Serial.read(); // Consumiamo il byte di start (0xAA)
-      
-      uint8_t cmd = Serial.read();
-      uint8_t len = Serial.read();
-      uint8_t chk = Serial.read();
-
-      // Calcoliamo e verifichiamo il Checksum (XOR tra CMD e LEN)
-      if (chk == (cmd ^ len)) {
-        if (cmd == CMD_START) {
-          gamePlay();
-        }
-        else if (cmd == CMD_RESET) {
-          resetCalibration();
-        }
-      }
-      else {
-        Serial.println("Errore: Checksum Seriale non valido!");
-      }
-    } 
-    else {
-      // Se il primo byte non è 0xAA, c'è spazzatura sulla seriale. Leggiamo un byte a vuoto per sbloccare il buffer finché non troviamo 0xAA.
-      Serial.read(); 
-    }
-  }
-  // Ritardo generale del loop
+  processSerialCommands();
+  
+  gamePlay();
+  
   delay(LOOP_DELAY);
 }
