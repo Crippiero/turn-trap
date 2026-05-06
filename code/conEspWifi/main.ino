@@ -377,6 +377,19 @@ void magnetDetection(){
       }
     }
   }
+  //stampa sulla seriale per debug e per l'ESP
+  Serial.println("%------------%");
+  for (uint8_t k = 0; k < 4; k++) {
+    if (podiumValue[k].intensity > 0) {
+      // Stampe di debug
+      Serial.print("Magnete "); Serial.print(k);
+      Serial.print(" in: X="); Serial.print(podiumValue[k].x);
+      Serial.print(" Y="); Serial.print(podiumValue[k].y);
+      Serial.print(" (Forza: "); Serial.print(podiumValue[k].intensity);
+      Serial.println(")");
+    } 
+    else { break; }
+  }
 }
 
 //calcolo una media dei valori per considerarlo come posizione 0 (ovvero misurazione senza magneti)
@@ -399,6 +412,50 @@ void calibrateSensors() {
       sensorBaseline[j][i] = sum / 4; 
     }
   }
+}
+
+void resetCalibration (){
+  Serial.println("Inizio Procedura di Setup/Reset...");
+  Serial.println("Assicurati che TUTTE le pedine siano rimosse!");
+  
+  // Un piccolo delay per dare il tempo di togliere le mani/pedine se necessario
+  delay(1000); 
+
+  // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
+  // dato che il comando è arrivato via seriale.
+  Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+
+  randomSeed(analogRead(A2));
+
+  strip.clear();
+  strip.show();
+
+  calibrateSensors();
+
+  Serial.println("Calibrazione completata!");
+  Serial.println("Posizionare le pedine agli angoli della partita e inviare comando START");
+  delay(PRESS_DELAY);
+}
+
+void gamePlay(){
+  delay(200);
+    magnetDetection(); // Cerco i magneti e stampo su seriale
+    
+    player1 = {-1, -1};
+    player2 = {-1, -1};
+    player3 = {-1, -1};
+    player4 = {-1, -1};
+
+    // Controllo se il punto esiste (intensità > 0) prima di aggiornare i player
+    if (podiumValue[0].intensity > 0) player1 = {podiumValue[0].x, podiumValue[0].y};
+    if (podiumValue[1].intensity > 0) player2 = {podiumValue[1].x, podiumValue[1].y};
+    if (podiumValue[2].intensity > 0) player3 = {podiumValue[2].x, podiumValue[2].y};
+    if (podiumValue[3].intensity > 0) player4 = {podiumValue[3].x, podiumValue[3].y};
+              
+    renderNewMaze(player1, player2, player3, player4);
+    
+    renderNewMaze(player1, player2, player3, player4);
+    delay(PRESS_DELAY);
 }
 
 // --- SETUP E LOOP ARDUINO ---
@@ -448,84 +505,27 @@ void loop() {
       Serial.read(); // Consumiamo il byte di start (0xAA)
       
       uint8_t cmd = Serial.read();
-      uint8_t len = Serial.read(); // Per ora è 0
+      uint8_t len = Serial.read();
       uint8_t chk = Serial.read();
 
       // Calcoliamo e verifichiamo il Checksum (XOR tra CMD e LEN)
       if (chk == (cmd ^ len)) {
-        
-        // ==========================================
-        // COMANDO 1: START
-        // ==========================================
         if (cmd == CMD_START) {
-          delay(200);
-          magnetDetection(); // Cerco i magneti
-
-          Serial.println("%------------%");
-          for (uint8_t k = 0; k < 4; k++) {
-              if (podiumValue[k].intensity > 0) {
-                  // Stampe di debug
-                  Serial.print("Magnete "); Serial.print(k);
-                  Serial.print(" in: X="); Serial.print(podiumValue[k].x);
-                  Serial.print(" Y="); Serial.print(podiumValue[k].y);
-                  Serial.print(" (Forza: "); Serial.print(podiumValue[k].intensity);
-                  Serial.println(")");
-              } 
-              else { break; }
-          }
-          player1 = {-1, -1};
-          player2 = {-1, -1};
-          player3 = {-1, -1};
-          player4 = {-1, -1};
-
-          // Controllo se il punto esiste (intensità > 0) prima di aggiornare i player
-          if (podiumValue[0].intensity > 0) player1 = {podiumValue[0].x, podiumValue[0].y};
-          if (podiumValue[1].intensity > 0) player2 = {podiumValue[1].x, podiumValue[1].y};
-          if (podiumValue[2].intensity > 0) player3 = {podiumValue[2].x, podiumValue[2].y};
-          if (podiumValue[3].intensity > 0) player4 = {podiumValue[3].x, podiumValue[3].y};
-                    
-          renderNewMaze(player1, player2, player3, player4);
-          
-          renderNewMaze(player1, player2, player3, player4);
-          delay(PRESS_DELAY);
+          gamePlay();
         }
-        
-        // ==========================================
-        // COMANDO 2: RESET
-        // ==========================================
         else if (cmd == CMD_RESET) {
-          Serial.println("Inizio Procedura di Setup/Reset...");
-          Serial.println("Assicurati che TUTTE le pedine siano rimosse!");
-          
-          // Un piccolo delay per dare il tempo di togliere le mani/pedine se necessario
-          delay(1000); 
-
-          // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
-          // dato che il comando è arrivato via seriale.
-          Serial.println("Calibrazione in corso... NON avvicinare magneti!");
-
-          randomSeed(analogRead(A2));
-
-          strip.clear();
-          strip.show();
-
-          calibrateSensors();
-
-          Serial.println("Calibrazione completata!");
-          Serial.println("Posizionare le pedine agli angoli della partita e inviare comando START");
-          delay(PRESS_DELAY);
+          resetCalibration();
         }
-        
-      } else {
+      }
+      else {
         Serial.println("Errore: Checksum Seriale non valido!");
       }
-    } else {
-      // Se il primo byte non è 0xAA, c'è spazzatura sulla seriale.
-      // Leggiamo un byte a vuoto per sbloccare il buffer finché non troviamo 0xAA.
+    } 
+    else {
+      // Se il primo byte non è 0xAA, c'è spazzatura sulla seriale. Leggiamo un byte a vuoto per sbloccare il buffer finché non troviamo 0xAA.
       Serial.read(); 
     }
   }
-
   // Ritardo generale del loop
   delay(LOOP_DELAY);
 }
