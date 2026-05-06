@@ -433,7 +433,6 @@ void resetCalibration (uint8_t _delay = 1000){
   Serial.println(".")
   delay(_delay /6);
 
-
   // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
   // dato che il comando è arrivato via seriale.
   Serial.println("Calibrazione in corso... NON avvicinare magneti!");
