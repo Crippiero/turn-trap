@@ -253,11 +253,10 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
       char cell = maze[i][j];
       uint32_t targetColor = colorWall;
       
-      if(cell == EMPTY){
-        targetColor = colorEmpty;
-      }   
-      else if(cell == GOAL){
-        targetColor = colorGoal;
+      switch(cell) {
+        case EMPTY: targetColor = colorEmpty; break;
+        case GOAL:  targetColor = colorGoal; break;
+        default:    targetColor = colorWall; break;
       }
 
       // Moltiplichiamo il LED orizzontalmente in base a RESOLUTION
