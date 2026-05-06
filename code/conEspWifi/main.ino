@@ -222,8 +222,8 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
 
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
   /*-- 1. Reset della matrice a solo MURI --*/
-  for (int8_t i = 0; i < ROWS; i++) {
-      for (int8_t j = 0; j < CHANNEL; j++) {
+  for (uint8_t i = 0; i < ROWS; i++) {
+      for (uint8_t j = 0; j < CHANNEL; j++) {
           maze[i][j] = WALL;
       }
   }
