@@ -103,7 +103,7 @@ void generateMazeDFS(int8_t row, int8_t col) {
 void addOpenBorders() {
   // da aggiungere una logiva per non creare delle "piazze aperte"
   int8_t chanceToOpenInner = 15; // 15% di probabilità di rompere un muro interno
-  int8_t chanceToOpenBorder = 30; // 30% di probabilità di aprire un muro sul bordo
+  int8_t chanceToOpenBorder = 20; // 20% di probabilità di aprire un muro sul bordo
 
   // --- Strade in piu ---
   for (int8_t r = 1; r < ROWS - 1; r++) {
