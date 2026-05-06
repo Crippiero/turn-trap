@@ -27,6 +27,9 @@ constexpr uint8_t SERIAL_START_BYTE = 0xAA;
 constexpr uint8_t CMD_START = 0x01;
 constexpr uint8_t CMD_RESET = 0x02;
 
+unsigned long previousGameMillis = 0;
+const unsigned long gameInterval = 200;
+
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 struct Podium {
@@ -554,10 +557,14 @@ void setup() {
 void loop() {
   processSerialCommands();
   
-  gamePlay();
-  unpr = generateUnprPoint(player1, player2, player3, player4);
-  printUnpr(unpr);
-  checkUnpr(unpr, player1, player2, player3, player4);
-  
-  delay(LOOP_DELAY);
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousGameMillis >= gameInterval) {
+    previousGameMillis = currentMillis; 
+
+    gamePlay();
+    
+    unpr = generateUnprPoint(player1, player2, player3, player4);
+    printUnpr(unpr);
+    checkUnpr(unpr, player1, player2, player3, player4);
 }
