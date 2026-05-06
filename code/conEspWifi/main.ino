@@ -518,7 +518,6 @@ void processSerialCommands() {
 }
 
 // --- SETUP E LOOP ARDUINO ---
-
 void setup() {
     Serial.begin(9600);
     Serial.println("Calibrazione in corso... NON avvicinare magneti!");
