@@ -453,8 +453,6 @@ void gamePlay(){
     if (podiumValue[3].intensity > 0) player4 = {podiumValue[3].x, podiumValue[3].y};
               
     renderNewMaze(player1, player2, player3, player4);
-    
-    renderNewMaze(player1, player2, player3, player4);
     delay(PRESS_DELAY);
 }
 
