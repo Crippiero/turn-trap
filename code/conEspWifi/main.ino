@@ -567,4 +567,5 @@ void loop() {
     unpr = generateUnprPoint(player1, player2, player3, player4);
     printUnpr(unpr);
     checkUnpr(unpr, player1, player2, player3, player4);
+  }
 }
