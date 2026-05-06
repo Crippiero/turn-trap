@@ -414,12 +414,25 @@ void calibrateSensors() {
   }
 }
 
-void resetCalibration (){
+void resetCalibration (uint8_t _delay = 1000){
   Serial.println("Inizio Procedura di Setup/Reset...");
   Serial.println("Assicurati che TUTTE le pedine siano rimosse!");
   
   // Un piccolo delay per dare il tempo di togliere le mani/pedine se necessario
-  delay(1000); 
+  Serial.print(".")
+  delay(_delay /6);
+  Serial.print(".")
+  delay(_delay /6);
+  Serial.println(".")
+  delay(_delay /6);
+
+  Serial.print(".")
+  delay(_delay /6);
+  Serial.print(".")
+  delay(_delay /6);
+  Serial.println(".")
+  delay(_delay /6);
+
 
   // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
   // dato che il comando è arrivato via seriale.
