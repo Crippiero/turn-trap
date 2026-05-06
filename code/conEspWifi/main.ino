@@ -5,8 +5,7 @@ constexpr uint8_t ROWS = 11;
 
 constexpr uint8_t UNPR_OFFSET = 2;
 
-//quanti led di fila hanno lo stell colore, per test ora lasciamo a 1, nel progetto VA AUMENTATO!!
-constexpr int8_t RESOLUTION = 1;
+constexpr int8_t RESOLUTION = 2; //quanti led di fila hanno lo stell colore, per le PCB serve che sia a 2
 constexpr uint16_t PHYS_COLS = CHANNEL * RESOLUTION; // Le colonne fisiche sulla striscia LED diventano i canali moltiplicati per la risoluzione
 
 constexpr uint8_t READINGS_DELAY = 1;
@@ -49,6 +48,8 @@ Point player2 = {0, CHANNEL - 1};
 Point player3 = {ROWS - 1, CHANNEL - 1};
 Point player4 = {ROWS - 1, 0};
 
+Point unpr = {-1, -1};
+
 // Variabili per pre-calcolare i colori (risparmia molta CPU nel loop)
 uint32_t colorWall;
 uint32_t colorEmpty;
@@ -58,7 +59,6 @@ uint32_t colorMalus;
 uint32_t colorBonus;
 
 // --- FUNZIONI ---
-
 bool isValid(int8_t row, int8_t col) {
   return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1;
 }
@@ -176,7 +176,8 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
   if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) {
     return p; 
   }
-  while (true){
+  uint8_t try;
+  while (try < 50){
     x = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     y = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     switch (random(4)){
@@ -217,6 +218,8 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
         }
         break;
     }
+    try++;
+    //capire che caso di default bho
   }
 }
 
@@ -297,8 +300,12 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     SIG = A0 => PORTC
 */
 
-void checkUnpr(){
+void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
+  //logica per controllare se un giocatore si trova sull'imprevisto
+}
 
+void printUnpr(Point unpr){
+  //logica per inserire nel labirinto l'imprevisto
 }
 
 void magnetDetection(){
@@ -419,18 +426,18 @@ void resetCalibration (uint8_t _delay = 1000){
   Serial.println("Assicurati che TUTTE le pedine siano rimosse!");
   
   // Un piccolo delay per dare il tempo di togliere le mani/pedine se necessario
-  Serial.print(".")
+  Serial.print(".");
   delay(_delay /6);
-  Serial.print(".")
+  Serial.print(".");
   delay(_delay /6);
-  Serial.println(".")
+  Serial.println(".");
   delay(_delay /6);
 
-  Serial.print(".")
+  Serial.print(".");
   delay(_delay /6);
-  Serial.print(".")
+  Serial.print(".");
   delay(_delay /6);
-  Serial.println(".")
+  Serial.println(".");
   delay(_delay /6);
 
   // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
@@ -548,6 +555,9 @@ void loop() {
   processSerialCommands();
   
   gamePlay();
+  unpr = generateUnprPoint(player1, player2, player3, player4);
+  printUnpr(unpr);
+  checkUnpr(unpr, player1, player2, player3, player4);
   
   delay(LOOP_DELAY);
 }
