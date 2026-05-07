@@ -311,8 +311,8 @@ Void getUnpr(Point unpr, unsigned long currentMillis){
   switch (random(4)){
     case 0:
       printUnpr(unpr, colorBonus);
-      int8_t check = false;
-      bool (check){
+      bool check = false;
+      while (check){
         if (currentMillis - previousGameMillis >= 1000){
           printUnpr(unpr, colorEmpty);
           check = !check;
