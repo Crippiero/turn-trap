@@ -307,18 +307,55 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     SIG = A0 => PORTC
 */
 
-Void getUnpr(Point unpr){
+Void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   switch (random(4)){
     case 0: //doppio turno
       printUnpr(unpr, colorBonus);
       delay(1000);
       printUnpr(unpr, colorEmpty);
       break;
-    case 1://spostamento casuale
+    case 1: //spostamento casuale
+      Point p;
+      bool check = false;
+      do{
+        p.x = random(CHANNEL);
+        p.y = random(ROWS);
+        if(isValidinUnpr(x, y))
+        {
+          if(x != (ROWS - 1) / 2 && y != (CHANNEL - 1) / 2) {
+            if (pl1.x != p.x && pl1.y != p.y $$ pl2.x != p.x && pl2.y != p.y && pl3.x != p.x && pl3.y != p.y pl4.x != p.x && pl4.y != p.y){
+              check = !check;
+            }
+          }
+        }
+      } while (!check);
+      printUnpr(p, colorMalus);
       break;
-    case 2:
+    case 2: //blocca il turno a un giocatore casuale
+      uint8_t numPlayer = 0;
+      if (pl1.x != -1 && pl1.y != -1) numPlayer++;
+      if (pl2.x != -1 && pl2.y != -1) numPlayer++;
+      if (pl3.x != -1 && pl3.y != -1) numPlayer++;
+      if (pl4.x != -1 && pl4.y != -1) numPlayer++;
+      switch(random(numPlayer)){
+        case 0:
+          printUnpr(pl1, colorWall);
+          break;
+        case 1:
+          printUnpr(pl2, colorWall);
+          break;
+        case 2:
+          printUnpr(pl3, colorWall);
+          break;
+        case 3:
+          printUnpr(pl4, colorWall);
+          break;
+      }
       break;
-    case 3:
+    case 3: //scambiarsi di posto con qualcuno
+      printUnpr(unpr, colorMalus);
+      delay(1000);
+      printUnpr(unpr, colorEmpty);
       break;
   }
 }
