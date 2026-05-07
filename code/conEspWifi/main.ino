@@ -586,6 +586,7 @@ void processSerialCommands() {
   switch (cmd) {
     case CMD_START:
       renderNewMaze(player1, player2, player3, player4);
+      unpr = generateUnprPoint(player1, player2, player3, player4);
       delay(PRESS_DELAY);
       break;
 
@@ -647,7 +648,6 @@ void loop() {
 
     gamePlay();
     
-    unpr = generateUnprPoint(player1, player2, player3, player4);
     printUnpr(unpr, colorUnpr);
     checkUnpr(unpr, player1, player2, player3, player4);
 
