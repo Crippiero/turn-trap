@@ -320,11 +320,24 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 */
 
 void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
-  //logica per controllare se un giocatore si trova sull'imprevisto
+  if(pl1.x == unpr.x && pl1.y == unpr.y){
+
+  }
+  else if(pl2.x == unpr.x && pl2.y == unpr.y){
+    
+  }
+  else if(pl3.x == unpr.x && pl3.y == unpr.y){
+    
+  }
+  else if(pl4.x == unpr.x && pl4.y == unpr.y){
+    
+  }
 }
 
 void printUnpr(Point unpr){
-  //logica per inserire nel labirinto l'imprevisto
+  for (uint8_t k = 0; k < RESOLUTION; k++) {
+    strip.setPixelColor(getPixelIndex(unpr.y, unpr.x, k), colorUnpr);
+  }
 }
 
 void magnetDetection(){
