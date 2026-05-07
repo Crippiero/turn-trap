@@ -333,6 +333,8 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
         }
       } while (!check);
       printUnpr(p, colorMalus);
+      delay(1000);
+      printUnpr(p, colorEmpty);
       break;
     case 2: //blocca il turno a un giocatore casuale
       uint8_t numPlayer = 0;
@@ -343,15 +345,23 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       switch(random(numPlayer)){
         case 0:
           printUnpr(pl1, colorWall);
+          delay(1000);
+          printUnpr(p, colorEmpty);
           break;
         case 1:
           printUnpr(pl2, colorWall);
+          delay(1000);
+          printUnpr(p, colorEmpty);
           break;
         case 2:
           printUnpr(pl3, colorWall);
+          delay(1000);
+          printUnpr(p, colorEmpty);
           break;
         case 3:
           printUnpr(pl4, colorWall);
+          delay(1000);
+          printUnpr(p, colorEmpty);
           break;
       }
       break;
