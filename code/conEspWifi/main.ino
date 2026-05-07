@@ -183,8 +183,8 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
   if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) {
     return p; 
   }
-  uint8_t Gentry;
-  while (Gentry < 50){
+  uint8_t genTry=0;
+  while (genTry < 50){
     x = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     y = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     switch (random(4)){
@@ -225,9 +225,10 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
         }
         break;
     }
-    Gentry++;
+    genTry++;
     //capire che caso di default bho
   }
+  return {-1, -1};
 }
 
 // x = colonna logica (0 fino a CHANNEL-1)
