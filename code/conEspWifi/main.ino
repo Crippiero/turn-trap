@@ -319,24 +319,45 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     SIG = A0 => PORTC
 */
 
-void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
-  if(pl1.x == unpr.x && pl1.y == unpr.y){
-    getUmpr(unpr);
-  }
-  else if(pl2.x == unpr.x && pl2.y == unpr.y){
-    getUmpr(unpr)
-  }
-  else if(pl3.x == unpr.x && pl3.y == unpr.y){
-    getUmpr(unpr)
-  }
-  else if(pl4.x == unpr.x && pl4.y == unpr.y){
-    getUmpr(unpr)
+Void getUnpr(Point unpr, unsigned long currentMillis){
+  switch (random(4)){
+    case 0:
+      printUnpr(unpr, colorBonus);
+      int8_t check = false;
+      bool (check){
+        if (currentMillis - previousGameMillis >= 1000){
+          printUnpr(unpr, colorEmpty);
+          check = !check;
+        }
+      }
+      break;
+    case 1:
+      break;
+    case 2:
+      break;
+    case 3:
+      break;
   }
 }
 
-void printUnpr(Point unpr){
+void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}, unsigned long currentMillis){
+  if(pl1.x == unpr.x && pl1.y == unpr.y){
+    getUmpr(unpr, unsigned long currentMillis);
+  }
+  else if(pl2.x == unpr.x && pl2.y == unpr.y){
+    getUmpr(unpr, unsigned long currentMillis);
+  }
+  else if(pl3.x == unpr.x && pl3.y == unpr.y){
+    getUmpr(unpr, unsigned long currentMillis);
+  }
+  else if(pl4.x == unpr.x && pl4.y == unpr.y){
+    getUmpr(unpr, unsigned long currentMillis);
+  }
+}
+
+void printUnpr(Point unpr, color){
   for (uint8_t k = 0; k < RESOLUTION; k++) {
-    strip.setPixelColor(getPixelIndex(unpr.y, unpr.x, k), colorUnpr);
+    strip.setPixelColor(getPixelIndex(unpr.y, unpr.x, k), color);
   }
 }
 
@@ -592,8 +613,8 @@ void loop() {
 
     gamePlay();
     
-    unpr = generateUnprPoint(player1, player2, player3, player4);
-    printUnpr(unpr);
+    unpr = generateUnprPoint(player1, player2, player3, player4, currentMillis);
+    printUnpr(unpr, colorUnpr);
     checkUnpr(unpr, player1, player2, player3, player4);
   }
 }
