@@ -283,19 +283,7 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 
       // Moltiplichiamo il LED orizzontalmente in base a RESOLUTION
       for (uint8_t k = 0; k < RESOLUTION; k++) {
-        uint16_t pixelIndex;
-        
-        // Calcolo serpentina basato sulle colonne FISICHE
-        if ((i & 1) == 0) {
-          // Riga pari: sinistra -> destra
-          // Partiamo dall'inizio del blocco della cella (j * RESOLUTION) e sommiamo k
-          pixelIndex = (i * PHYS_COLS) + (j * RESOLUTION) + k;
-        } else {    
-          // Riga dispari: destra -> sinistra
-          // Partiamo dalla fine della riga e sottraiamo l'avanzamento
-          pixelIndex = (i * PHYS_COLS) + (PHYS_COLS - 1) - ((j * RESOLUTION) + k);
-        }
-        strip.setPixelColor(pixelIndex, targetColor);
+        strip.setPixelColor(getPixelIndex(j, i, k), targetColor);
       }
       Serial.print(cell);
       Serial.print(" ");
