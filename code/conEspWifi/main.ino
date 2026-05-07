@@ -71,6 +71,10 @@ bool isValidinUnpr(int8_t row, int8_t col) {
   return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL;
 }
 
+bool samePoint(Point a, Point b){
+    return a.x == b.x && a.y == b.y;
+}
+
 void generateMazeDFS(int8_t row, int8_t col) {
   maze[row][col] = EMPTY;
 
@@ -320,10 +324,9 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       do{
         p.x = random(CHANNEL);
         p.y = random(ROWS);
-        if(isValidinUnpr(p.x, p.y))
-        {
-          if(p.x != (ROWS - 1) / 2 && p.y != (CHANNEL - 1) / 2) {
-            if (pl1.x != p.x && pl1.y != p.y && pl2.x != p.x && pl2.y != p.y && pl3.x != p.x && pl3.y != p.y && pl4.x != p.x && pl4.y != p.y){
+        if(isValidinUnpr(p.x, p.y)){
+          if(!(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
+            if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) {
               check = !check;
             }
           }
