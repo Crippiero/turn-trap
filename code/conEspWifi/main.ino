@@ -307,19 +307,14 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     SIG = A0 => PORTC
 */
 
-Void getUnpr(Point unpr, unsigned long currentMillis){
+Void getUnpr(Point unpr){
   switch (random(4)){
-    case 0:
+    case 0: //doppio turno
       printUnpr(unpr, colorBonus);
-      bool check = false;
-      while (check){
-        if (currentMillis - previousGameMillis >= 1000){
-          printUnpr(unpr, colorEmpty);
-          check = !check;
-        }
-      }
+      delay(1000);
+      printUnpr(unpr, colorEmpty);
       break;
-    case 1:
+    case 1://spostamento casuale
       break;
     case 2:
       break;
@@ -328,18 +323,18 @@ Void getUnpr(Point unpr, unsigned long currentMillis){
   }
 }
 
-void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}, unsigned long currentMillis){
+void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   if(pl1.x == unpr.x && pl1.y == unpr.y){
-    getUmpr(unpr, unsigned long currentMillis);
+    getUmpr(unpr);
   }
   else if(pl2.x == unpr.x && pl2.y == unpr.y){
-    getUmpr(unpr, unsigned long currentMillis);
+    getUmpr(unpr);
   }
   else if(pl3.x == unpr.x && pl3.y == unpr.y){
-    getUmpr(unpr, unsigned long currentMillis);
+    getUmpr(unpr);
   }
   else if(pl4.x == unpr.x && pl4.y == unpr.y){
-    getUmpr(unpr, unsigned long currentMillis);
+    getUmpr(unpr);
   }
 }
 
@@ -601,7 +596,7 @@ void loop() {
 
     gamePlay();
     
-    unpr = generateUnprPoint(player1, player2, player3, player4, currentMillis);
+    unpr = generateUnprPoint(player1, player2, player3, player4);
     printUnpr(unpr, colorUnpr);
     checkUnpr(unpr, player1, player2, player3, player4);
   }
