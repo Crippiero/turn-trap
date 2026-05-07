@@ -307,7 +307,7 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
     SIG = A0 => PORTC
 */
 
-Void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
+void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   switch (random(4)){
     case 0: //doppio turno
       printUnpr(unpr, colorBonus);
@@ -320,10 +320,10 @@ Void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       do{
         p.x = random(CHANNEL);
         p.y = random(ROWS);
-        if(isValidinUnpr(x, y))
+        if(isValidinUnpr(p.x, p.y))
         {
-          if(x != (ROWS - 1) / 2 && y != (CHANNEL - 1) / 2) {
-            if (pl1.x != p.x && pl1.y != p.y $$ pl2.x != p.x && pl2.y != p.y && pl3.x != p.x && pl3.y != p.y pl4.x != p.x && pl4.y != p.y){
+          if(p.x != (ROWS - 1) / 2 && p.y != (CHANNEL - 1) / 2) {
+            if (pl1.x != p.x && pl1.y != p.y && pl2.x != p.x && pl2.y != p.y && pl3.x != p.x && pl3.y != p.y && pl4.x != p.x && pl4.y != p.y){
               check = !check;
             }
           }
@@ -362,20 +362,20 @@ Void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
 
 void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   if(pl1.x == unpr.x && pl1.y == unpr.y){
-    getUmpr(unpr);
+    getUnpr(unpr);
   }
   else if(pl2.x == unpr.x && pl2.y == unpr.y){
-    getUmpr(unpr);
+    getUnpr(unpr);
   }
   else if(pl3.x == unpr.x && pl3.y == unpr.y){
-    getUmpr(unpr);
+    getUnpr(unpr);
   }
   else if(pl4.x == unpr.x && pl4.y == unpr.y){
-    getUmpr(unpr);
+    getUnpr(unpr);
   }
 }
 
-void printUnpr(Point unpr, color){
+void printUnpr(Point unpr, uint32_t color){
   for (uint8_t k = 0; k < RESOLUTION; k++) {
     strip.setPixelColor(getPixelIndex(unpr.y, unpr.x, k), color);
   }
