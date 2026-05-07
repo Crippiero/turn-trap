@@ -226,6 +226,23 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
   }
 }
 
+// x = colonna logica (0 fino a CHANNEL-1)
+// y = riga logica (0 fino a ROWS-1)
+// k = offset interno se RESOLUTION > 1 (da 0 a RESOLUTION-1)
+
+uint16_t getPixelIndex(int8_t x, int8_t y, uint8_t k = 0) {
+  uint16_t index;
+
+  if ((y & 1) == 0) {
+    // RIGA PARI: Direzione normale (->)
+    index = (y * PHYS_COLS) + (x * RESOLUTION) + k;
+  } else {
+    // RIGA DISPARI: Direzione invertita (<-)
+    index = (y * PHYS_COLS) + (PHYS_COLS - 1) - ((x * RESOLUTION) + k);
+  }
+  return index;
+}
+
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
   /*-- 1. Reset della matrice a solo MURI --*/
   for (uint8_t i = 0; i < ROWS; i++) {
@@ -251,7 +268,6 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   // 4. Stampa su led neopixel
   Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
   
-  // Non serve usare strip.clear(), sovrascriviamo direttamente tutti i LED
   for(uint8_t i = 0; i < ROWS; i++) {
     for(uint8_t j = 0; j < CHANNEL; j++) {
         
