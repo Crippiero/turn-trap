@@ -45,7 +45,6 @@ Podium podiumValue[4];
 char maze[ROWS][CHANNEL];
 uint16_t sensorBaseline[ROWS][CHANNEL]; // Contiene il valore a riposo di ogni sensore per usarlo come punto zero
 
-//VA TOLTO???
 Point player1 = {0, 0};
 Point player2 = {0, CHANNEL - 1};
 Point player3 = {ROWS - 1, CHANNEL - 1};
@@ -226,7 +225,6 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
         break;
     }
     genTry++;
-    //capire che caso di default bho
   }
   return {-1, -1};
 }
