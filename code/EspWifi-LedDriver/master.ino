@@ -80,6 +80,13 @@ void sendCommandToAll(char cmd) {
   Serial.print('<'); Serial.print(cmd); Serial.print('>');
 }
 
+void sendInfoToWeb(const char* message) {
+  // Invia un pacchetto di testo all'ESP
+  Serial.print("<T,");
+  Serial.print(message);
+  Serial.print(">");
+}
+
 //funzioni di generazione
 void generateMazeDFS(int8_t row, int8_t col) {
   maze[row][col] = EMPTY;
@@ -489,7 +496,7 @@ void loop() {
 
   if (currentMillis - previousGameMillis >= gameInterval) {
     previousGameMillis = currentMillis; 
-    
+
     gamePlay();
     
     printUnpr(unpr, 'U');
