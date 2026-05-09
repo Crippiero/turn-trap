@@ -1,8 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 
-#define NUM_LEDS 22      // 11 caselle * 2 LED = 22 LED fisici
-#define NUM_STRIPS 11    // Dal pin 2 al 12
-#define RESOLUTION 2     // LED per ogni casella logica
+constexpr uint8_t NUM_BOXES 11
+constexpr uint8_t RESOLUTION 2 // LED per ogni casella logica
+constexpr uint8_t NUM_LEDS = NUM_BOXES*RESOLUTION; // 11 caselle * 2 LED = 22 LED fisici
+constexpr uint8_t NUM_STRIPS 11 // Dal pin 2 al 12
 
 // Creiamo un array per contenere le striscie. 
 Adafruit_NeoPixel strips[NUM_STRIPS] = {
