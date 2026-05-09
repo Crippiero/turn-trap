@@ -2,255 +2,278 @@
 #include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
 
-#define START_BYTE 0xAA
+// --- CONFIGURAZIONE WIFI ---
+const char* ssid = "Turn&Trap";
+const char* password = "LCS";
 
-// ESP <-> Arduino UNO
-SoftwareSerial UNO(14, 12); // D5 = RX, D6 = TX
+// --- CONFIGURAZIONE PIN ---
+// D1 (GPIO 5) e D2 (GPIO 4) per i pulsanti fisici
+#define BTN_START 5 
+#define BTN_RESET 4
 
-enum Command {
-  CMD_START = 0x01,
-  CMD_RESET = 0x02
-};
-
-const char* ssid = "ESP_CONTROL";
-const char* password = "12345678";
+// ESP <-> Arduino Master
+// Rx = D5 (GPIO 14), Tx = D6 (GPIO 12)
+SoftwareSerial UNO(14, 12); 
 
 ESP8266WebServer server(80);
 
-// Buffer per accumulare i messaggi dalla seriale
 String serialBuffer = "";
+unsigned long lastDebounceTime = 0;
+
+// --- PAGINA HTML + CSS + JS ---
+const char htmlPage[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Labirinto Magnetico - Regia</title>
+  <style>
+    :root {
+      --bg-color: #0d0e15; --panel-bg: #1a1c29; --text-color: #ffffff;
+      --accent: #00ffff; --wall: #ff2a2a; --empty: #2a2d3e;
+      --goal: #b026ff; --bonus: #ffff00; --malus: #ff8c00; --player: #00e5ff;
+    }
+    body {
+      margin: 0; padding: 20px; background-color: var(--bg-color); color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    
+    .header {
+      width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 15px; border-bottom: 2px solid var(--panel-bg); padding-bottom: 10px;
+    }
+    .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
+    
+    .switch-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #888; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .controls { width: 100%; max-width: 600px; display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+    .btn { background: var(--panel-bg); color: var(--accent); border: 2px solid var(--accent); padding: 10px 20px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; transition: all 0.3s ease; flex: 1; }
+    .btn:hover { background: var(--accent); color: var(--bg-color); box-shadow: 0 0 15px var(--accent); }
+    .btn-reset { border-color: var(--wall); color: var(--wall); }
+    .btn-reset:hover { background: var(--wall); color: var(--text-color); box-shadow: 0 0 15px var(--wall); }
+
+    #board-container { background: var(--panel-bg); padding: 15px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    #game-board { display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); gap: 2px; width: 90vw; max-width: 500px; aspect-ratio: 1/1; }
+    .cell { background-color: var(--empty); border-radius: 3px; position: relative; transition: background-color 0.2s; }
+    .cell.wall { background-color: var(--wall); box-shadow: 0 0 5px var(--wall); }
+    .cell.goal { background-color: var(--goal); box-shadow: 0 0 10px var(--goal); }
+    .cell.bonus { background-color: var(--bonus); box-shadow: 0 0 10px var(--bonus); }
+    .cell.malus { background-color: var(--malus); box-shadow: 0 0 10px var(--malus); }
+    
+    .cell.player::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50%; height: 50%; background-color: var(--player); border-radius: 50%; box-shadow: 0 0 8px var(--player); z-index: 10; }
+
+    #debug-terminal { display: none; width: 100%; max-width: 600px; height: 150px; margin-top: 20px; padding: 10px; box-sizing: border-box; background-color: #000; color: #0f0; font-family: monospace; font-size: 0.8rem; border: 1px solid #333; border-radius: 5px; overflow-y: auto; }
+    
+    #toast-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(3px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 100; }
+    #toast-overlay.show { opacity: 1; pointer-events: all;}
+    #toast-box { background: var(--panel-bg); padding: 20px 40px; border-radius: 10px; border: 2px solid var(--accent); box-shadow: 0 0 30px rgba(0, 255, 255, 0.3); text-align: center; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    #toast-overlay.show #toast-box { transform: scale(1); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Labyrinth OS</h1>
+    <div class="switch-container">
+      <span>Debug</span>
+      <label class="switch">
+        <input type="checkbox" id="debugToggle" onchange="toggleDebug()">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="sendCommand('start')">Start Game</button>
+    <button class="btn btn-reset" onclick="sendCommand('reset')">Reset Sensori</button>
+  </div>
+
+  <div id="board-container">
+    <div id="game-board"></div>
+  </div>
+
+  <div id="debug-terminal"></div>
+
+  <div id="toast-overlay">
+    <div id="toast-box">Attendere...</div>
+  </div>
+
+  <script>
+    const ROWS = 11; const COLS = 11;
+    const board = document.getElementById('game-board');
+    const terminal = document.getElementById('debug-terminal');
+    const toastOverlay = document.getElementById('toast-overlay');
+    const toastBox = document.getElementById('toast-box');
+    let cells = []; let players = {}; let toastTimeout;
+    let streamBuffer = ""; // Accumula i dati testuali in arrivo
+
+    for (let i = 0; i < ROWS * COLS; i++) {
+      let cell = document.createElement('div');
+      cell.className = 'cell';
+      board.appendChild(cell);
+      cells.push(cell);
+    }
+
+    function toggleDebug() { terminal.style.display = document.getElementById('debugToggle').checked ? 'block' : 'none'; }
+    function logDebug(msg) { if(document.getElementById('debugToggle').checked) { terminal.innerHTML += msg + '<br>'; terminal.scrollTop = terminal.scrollHeight; } }
+
+    function showToast(message) {
+      toastBox.innerText = message;
+      toastOverlay.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => { toastOverlay.classList.remove('show'); }, 3000);
+    }
+
+    function getCell(x, y) { if (x < 0 || x >= ROWS || y < 0 || y >= COLS) return null; return cells[x * COLS + y]; }
+
+    function updatePlayersOnBoard() {
+      cells.forEach(c => c.classList.remove('player'));
+      for (let id in players) {
+        let p = players[id];
+        let cell = getCell(p.x, p.y);
+        if (cell) cell.classList.add('player');
+      }
+    }
+
+    function sendCommand(endpoint) {
+      fetch('/' + endpoint).then(() => logDebug("Comando " + endpoint + " inviato."));
+    }
+
+    function processPacket(payload) {
+      logDebug("Ric: <" + payload + ">");
+      let parts = payload.split(',');
+      let cmd = parts[0];
+
+      if (cmd === 'R') {
+        let rIdx = parseInt(parts[1]); let rowData = parts[2];
+        for (let c = 0; c < rowData.length; c++) {
+          let cell = getCell(rIdx, c); if (!cell) continue;
+          cell.className = 'cell'; 
+          let char = rowData[c];
+          if (char === '#') cell.classList.add('wall');
+          else if (char === 'G') cell.classList.add('goal');
+        }
+      } 
+      else if (cmd === 'U') {
+        let x = parseInt(parts[1]); let y = parseInt(parts[2]); let color = parts[3];
+        let cell = getCell(x, y);
+        if (cell) {
+          cell.classList.remove('bonus', 'malus');
+          if (color === 'B' || color === 'U') cell.classList.add('bonus');
+          else if (color === 'M' || color === 'W') cell.classList.add('malus');
+          else if (color === 'E' || color === 'x') cell.className = 'cell';
+        }
+      } 
+      else if (cmd === 'M') {
+        let id = parts[1]; let x = parseInt(parts[2]); let y = parseInt(parts[3]); let intensity = parseInt(parts[4]);
+        if (intensity > 0 && x !== -1) players[id] = {x: x, y: y};
+        else delete players[id]; 
+      }
+      else if (cmd === 'T') { showToast(payload.substring(2)); }
+      else if (cmd === 'C') { cells.forEach(c => c.className = 'cell'); players = {}; }
+      else if (cmd === 'S') { updatePlayersOnBoard(); }
+    }
+
+    // --- CICLO DI LETTURA (POLLING COME NEL VECCHIO CODICE) ---
+    // Legge ogni 250ms per avere un gioco fluido senza bloccare il browser
+    setInterval(function() {
+      fetch('/getLog')
+        .then(response => response.text())
+        .then(data => {
+          if(data.length > 0) {
+             streamBuffer += data;
+             
+             // Estrae e processa tutti i pacchetti completi compresi tra < e >
+             let endIdx;
+             while((endIdx = streamBuffer.indexOf('>')) !== -1) {
+                let startIdx = streamBuffer.indexOf('<');
+                if (startIdx !== -1 && startIdx < endIdx) {
+                   let payload = streamBuffer.substring(startIdx + 1, endIdx);
+                   processPacket(payload);
+                }
+                // Rimuove la parte processata dal buffer
+                streamBuffer = streamBuffer.substring(endIdx + 1);
+             }
+             
+             // Sicurezza: se il buffer si sporca troppo lo svuota
+             if (streamBuffer.length > 500) streamBuffer = "";
+          }
+        })
+        .catch(err => console.log("Errore Fetch", err));
+    }, 250); 
+  </script>
+</body>
+</html>
+)=====";
+
 
 // ---------------- SETUP ----------------
-
 void setup() {
-  Serial.begin(115200);   // PC DEBUG + OUTPUT ARDUINO
-  UNO.begin(9600);        // COMUNICAZIONE CON UNO
+  Serial.begin(115200); // Debug PC (opzionale)
+  UNO.begin(9600);      // Comunicazione via D5/D6 con Master
+  
+  pinMode(BTN_START, INPUT_PULLUP);
+  pinMode(BTN_RESET, INPUT_PULLUP);
 
   WiFi.softAP(ssid, password);
 
-  server.on("/", handleRoot);
-  server.on("/start", handleStart);
-  server.on("/reset", handleReset);
-  server.on("/getLog", handleGetLog);
+  // Endpoint del Server
+  server.on("/", []() { server.send(200, "text/html", htmlPage); });
+  
+  // Endpoint dei Pulsanti Web
+  server.on("/start", []() {
+    UNO.print("<START>");
+    server.send(200, "text/plain", "OK");
+  });
+  
+  server.on("/reset", []() {
+    UNO.print("<RESET>");
+    server.send(200, "text/plain", "OK");
+  });
+  
+  // Endpoint per leggere i dati ricevuti da Arduino Master
+  server.on("/getLog", []() {
+    server.send(200, "text/plain", serialBuffer);
+    serialBuffer = ""; // Svuota il buffer dell'ESP dopo averlo spedito al Web
+  });
 
   server.begin();
-
-  pinMode(5, INPUT_PULLUP);
-  pinMode(4, INPUT_PULLUP);
 }
 
-// ---------------- LOOP ----------------
 
+// ---------------- LOOP ----------------
 void loop() {
   server.handleClient();
 
-  // Pulsanti fisici ESP
-  if (digitalRead(5) == LOW) {
-    handleStart();
-    delay(200);
+  // Lettura Pulsanti Fisici ESP
+  if (millis() - lastDebounceTime > 200) { 
+    if (digitalRead(BTN_START) == LOW) {
+      UNO.print("<START>");
+      lastDebounceTime = millis();
+    }
+    if (digitalRead(BTN_RESET) == LOW) {
+      UNO.print("<RESET>");
+      lastDebounceTime = millis();
+    }
   }
 
-  if (digitalRead(4) == LOW) {
-    handleReset();
-    delay(200);
-  }
-
-  // 🔥 FORWARD: Arduino UNO → PC e accumulo nel buffer Web
+  // Ricezione Seriale dal Master e accumulo per il sito Web
   while (UNO.available()) {
     char c = UNO.read();
-    Serial.write(c);       
-    serialBuffer += c;     
+    Serial.write(c);   // Opzionale: stampa anche sul Monitor Seriale del PC     
+    serialBuffer += c; // Accumula per la pagina web
   }
 
-  // Limite di sicurezza per non riempire la RAM dell'ESP
+  // Limite di sicurezza RAM
   if (serialBuffer.length() > 1000) {
     serialBuffer = serialBuffer.substring(serialBuffer.length() - 500);
   }
-}
-
-// ---------------- WEB PAGE ----------------
-
-void handleRoot() {
-  String page = R"rawliteral(
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          body { font-family: Arial, sans-serif; text-align: center; margin-top: 20px; background-color: #eef2f3; }
-          .btn { padding: 15px 30px; font-size: 18px; margin: 10px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
-          .btn-start { background-color: #4CAF50; color: white; }
-          .btn-reset { background-color: #f44336; color: white; }
-          
-          /* Stile per i Dati Extra */
-          .data-box { margin: 20px auto; padding: 15px; width: 90%; max-width: 400px; background: #fff; border-left: 5px solid #2196F3; font-weight: bold; display: none; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); text-align: left; white-space: pre-line;}
-          
-          /* Stile per il Labirinto */
-          .maze-container { margin: 20px auto; background-color: #333; padding: 15px; display: inline-block; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }
-          .row { display: flex; justify-content: center; }
-          .cell { width: 22px; height: 22px; margin: 1px; border-radius: 3px; }
-          
-          /* Stile per i Log grezzi */
-          textarea { width: 90%; max-width: 500px; height: 100px; font-family: monospace; font-size: 12px; margin-top: 20px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        </style>
-      </head>
-      <body>
-        <h1>ESP Control Panel</h1>
-
-        <div>
-          <button class="btn btn-start" onclick="fetch('/start')">START</button>
-          <button class="btn btn-reset" onclick="fetch('/reset')">RESET</button>
-        </div>
-
-        <div id="dataBox" class="data-box">Nessun dato extra</div>
-
-        <div id="mazeContainer" class="maze-container">
-          <div style="color: #aaa; padding: 20px;">In attesa dei dati dalla seriale...</div>
-        </div>
-
-        <br>
-        <textarea id="logBox" readonly placeholder="Log Seriale Grezzo..."></textarea>
-
-        <script>
-          let fullLog = "";
-          let lastRenderedMaze = "";
-
-          setInterval(function() {
-            fetch('/getLog')
-              .then(response => response.text())
-              .then(data => {
-                if(data.length > 0) {
-                  fullLog += data;
-                  
-                  // Aggiorna il box dei log testuali
-                  let logBox = document.getElementById('logBox');
-                  logBox.value += data;
-                  logBox.scrollTop = logBox.scrollHeight;
-                  
-                  // Evita che la variabile Javascript esploda in RAM
-                  if(fullLog.length > 15000) fullLog = fullLog.substring(fullLog.length - 5000);
-                  
-                  parseMazeAndData();
-                }
-              });
-          }, 1000);
-
-          // Funzione "Magica" che interpreta il testo
-          function parseMazeAndData() {
-            let marker1 = "%------------%";
-            let marker2 = "--- NUOVO LABIRINTO ---";
-            
-            // Cerca l'ultimo aggiornamento ricevuto (partendo dalla fine)
-            let idx1 = fullLog.lastIndexOf(marker1);
-            if (idx1 !== -1) {
-              let idx2 = fullLog.indexOf(marker2, idx1);
-              if (idx2 !== -1) {
-                
-                // 1. ESTRAI I DATI EXTRA
-                // Prende tutto ciò che c'è tra "%----%" e "--- NUOVO LABIRINTO ---"
-                let rawData = fullLog.substring(idx1 + marker1.length, idx2).trim();
-                let dataBox = document.getElementById('dataBox');
-                
-                if (rawData.length > 0) {
-                  dataBox.innerText = rawData;
-                  dataBox.style.display = 'block';
-                } else {
-                  dataBox.style.display = 'none';
-                }
-
-                // 2. ESTRAI E DISEGNA IL LABIRINTO
-                let mazeStr = fullLog.substring(idx2 + marker2.length).trim();
-                let lines = mazeStr.split('\n');
-                let mazeLines = [];
-                
-                // Filtra solo le righe che contengono i caratteri del labirinto
-                for(let i = 0; i < lines.length; i++) {
-                  let line = lines[i].trim();
-                  if (/^[x#G\s]+$/.test(line) && line.length > 0) {
-                    mazeLines.push(line);
-                  } else if (mazeLines.length > 0) {
-                    // Appena trova una riga che non c'entra niente, ferma la lettura del labirinto
-                    break;
-                  }
-                }
-                
-                // Se c'è un labirinto ed è diverso dal precedente, lo disegna (evita sfarfallii)
-                let currentMazeStr = mazeLines.join('|');
-                if (mazeLines.length > 0 && currentMazeStr !== lastRenderedMaze) {
-                  lastRenderedMaze = currentMazeStr;
-                  renderMaze(mazeLines);
-                }
-              }
-            }
-          }
-
-          function renderMaze(lines) {
-            let container = document.getElementById('mazeContainer');
-            container.innerHTML = ''; // Pulisce il contenitore
-            
-            lines.forEach(line => {
-              let rowDiv = document.createElement('div');
-              rowDiv.className = 'row';
-              
-              // Rimuove gli spazi e crea un array di caratteri
-              let chars = line.replace(/\s/g, '').split('');
-              
-              chars.forEach(c => {
-                let cell = document.createElement('div');
-                cell.className = 'cell';
-                
-                // ASSEGNAZIONE COLORI
-                if (c === '#') cell.style.backgroundColor = '#ff4d4d'; // Rosso
-                else if (c === 'x') cell.style.backgroundColor = '#ffffff'; // Bianco
-                else if (c === 'G') cell.style.backgroundColor = '#9b59b6'; // Viola
-                else cell.style.backgroundColor = 'transparent'; // Sicurezza
-                
-                rowDiv.appendChild(cell);
-              });
-              container.appendChild(rowDiv);
-            });
-          }
-        </script>
-      </body>
-    </html>
-  )rawliteral";
-
-  server.send(200, "text/html", page);
-}
-
-// ---------------- COMMANDS E LOGS ----------------
-
-void handleGetLog() {
-  server.send(200, "text/plain", serialBuffer);
-  serialBuffer = ""; 
-}
-
-void handleStart() {
-  sendPacket(CMD_START, nullptr, 0);
-  server.send(200, "text/plain", "START sent");
-}
-
-void handleReset() {
-  sendPacket(CMD_RESET, nullptr, 0);
-  server.send(200, "text/plain", "RESET sent");
-}
-
-// ---------------- BINARY PROTOCOL ----------------
-
-void sendPacket(uint8_t cmd, uint8_t* data, uint8_t len) {
-  uint8_t checksum = 0;
-
-  UNO.write(START_BYTE);
-  UNO.write(cmd);
-  UNO.write(len);
-
-  checksum ^= cmd;
-  checksum ^= len;
-
-  for (int i = 0; i < len; i++) {
-    UNO.write(data[i]);
-    checksum ^= data[i];
-  }
-
-  UNO.write(checksum);
 }
