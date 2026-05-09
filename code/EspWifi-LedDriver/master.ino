@@ -104,7 +104,7 @@ void generateMazeDFS(int8_t row, int8_t col) {
     int8_t deltaCol = dirY[dirs[i]];
     int8_t nextRow = row + deltaRow;
     int8_t nextCol = col + deltaCol;
-    
+
     if (isValid(nextRow, nextCol) && maze[nextRow][nextCol] == WALL) {
       maze[row + deltaRow/2][col + deltaCol/2] = EMPTY;
       generateMazeDFS(nextRow, nextCol);
@@ -113,19 +113,24 @@ void generateMazeDFS(int8_t row, int8_t col) {
 }
 
 void addOpenBorders() {
+  //percentuali di probabilità che si apta un muro interno o un muro sul bordo
   int8_t chanceToOpenInner = 15; 
-  int8_t chanceToOpenBorder = 20; 
+  int8_t chanceToOpenBorder = 20;
+
   for (int8_t r = 1; r < ROWS - 1; r++) {
     for (int8_t c = 1; c < CHANNEL - 1; c++) {
       if (maze[r][c] == WALL) {
         bool horizontalPass = (maze[r][c-1] == EMPTY && maze[r][c+1] == EMPTY);
         bool verticalPass = (maze[r-1][c] == EMPTY && maze[r+1][c] == EMPTY);
+
         if ((horizontalPass || verticalPass) && random(100) < chanceToOpenInner) {
           maze[r][c] = EMPTY;
         }
       }
     }
   }
+
+  //muri esterni aperti
   for (int8_t r = 0; r < ROWS; r++) {
     if (random(100) < chanceToOpenBorder) maze[r][0] = EMPTY;        
     if (random(100) < chanceToOpenBorder) maze[r][CHANNEL-1] = EMPTY;   
@@ -138,38 +143,73 @@ void addOpenBorders() {
 
 void connectPlayerToMaze(int8_t posX, int8_t posY) {
   maze[posX][posY] = EMPTY;
+
   static const int8_t deltaX[] = {-1, 1, 0, 0};
   static const int8_t deltaY[] = {0, 0, -1, 1};
   bool connected = false;
+
+  //controllo se gia connesso
   for(int8_t i=0; i<4; i++) {
     int8_t neighborX = posX + deltaX[i];
     int8_t neighborY = posY + deltaY[i];
+
     if (neighborX >= 0 && neighborX < ROWS && neighborY >= 0 && neighborY < CHANNEL) {
       if (maze[neighborX][neighborY] != WALL) connected = true;
     }
   }
+
   if (!connected) {
     int8_t centerX = ROWS / 2;
     int8_t centerY = CHANNEL / 2;
+
     int8_t stepX = (centerX > posX) ? 1 : ((centerX < posX) ? -1 : 0);
     int8_t stepY = (centerY > posY) ? 1 : ((centerY < posY) ? -1 : 0);
-    if (posX + stepX >= 0 && posX + stepX < ROWS) maze[posX + stepX][posY] = EMPTY;
-    else if (posY + stepY >= 0 && posY + stepY < CHANNEL) maze[posX][posY + stepY] = EMPTY;
+
+    if (posX + stepX >= 0 && posX + stepX < ROWS){ 
+      maze[posX + stepX][posY] = EMPTY;
+    }
+    else if (posY + stepY >= 0 && posY + stepY < CHANNEL) {
+      maze[posX][posY + stepY] = EMPTY;
+    }
   }
 }
 
 Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   Point p = {-1, -1};
-  if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) return p; 
+
+  if (pl1.x == -1 && pl2.x == -1 && pl3.x == -1 && pl4.x == -1) return p; //così evito un loop infinito
+
   uint8_t genTry=0;
+
   while (genTry < 50){
     int8_t x = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     int8_t y = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
+    
     switch (random(4)){
-      case 0: if (pl1.x != -1 && pl1.y != -1) { p.x = pl1.x + x; p.y = pl1.y + y; if (inGame(p.x, p.y)) return p; } break;
-      case 1: if (pl2.x != -1 && pl2.y != -1) { p.x = pl2.x + x; p.y = pl2.y + y; if (inGame(p.x, p.y)) return p; } break;
-      case 2: if (pl3.x != -1 && pl3.y != -1) { p.x = pl3.x + x; p.y = pl3.y + y; if (inGame(p.x, p.y)) return p; } break;
-      case 3: if (pl4.x != -1 && pl4.y != -1) { p.x = pl4.x + x; p.y = pl4.y + y; if (inGame(p.x, p.y)) return p; } break;
+      case 0: 
+        if (pl1.x != -1 && pl1.y != -1) { 
+          p.x = pl1.x + x; p.y = pl1.y + y; 
+          if (inGame(p.x, p.y)) return p; 
+        } 
+        break;
+      case 1: 
+        if (pl2.x != -1 && pl2.y != -1) { 
+          p.x = pl2.x + x; p.y = pl2.y + y; 
+          if (inGame(p.x, p.y)) return p; 
+        } 
+        break;
+      case 2: 
+        if (pl3.x != -1 && pl3.y != -1) { 
+          p.x = pl3.x + x; p.y = pl3.y + y; 
+          if (inGame(p.x, p.y)) return p; 
+        } 
+        break;
+      case 3: 
+        if (pl4.x != -1 && pl4.y != -1) { 
+          p.x = pl4.x + x; p.y = pl4.y + y; 
+          if (inGame(p.x, p.y)) return p; 
+        } 
+        break;
     }
     genTry++;
   }
@@ -181,8 +221,10 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   for (uint8_t i = 0; i < ROWS; i++) {
       for (uint8_t j = 0; j < CHANNEL; j++) maze[i][j] = WALL;
   }
+
   int8_t startX = (ROWS - 1) / 2;
   int8_t startY = (CHANNEL - 1) / 2;
+  
   generateMazeDFS(startX, startY);
   addOpenBorders();
   maze[startX][startY] = GOAL;
