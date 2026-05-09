@@ -83,20 +83,28 @@ void sendCommandToAll(char cmd) {
 //funzioni di generazione
 void generateMazeDFS(int8_t row, int8_t col) {
   maze[row][col] = EMPTY;
+
   static const int8_t dirX[] = {-2, 2, 0, 0};
   static const int8_t dirY[] = {0, 0, -2, 2};
+
+  //creo un array con gli index da mischiare invece di farlo con i le direzioni
   int8_t dirs[] = {0, 1, 2, 3};
+
   for (int8_t i = 0; i < 4; i++) {
     int8_t swapIdx = random(4);
     int8_t temp = dirs[i];
+
     dirs[i] = dirs[swapIdx];
     dirs[swapIdx] = temp;
   }
+
+  // Proviamo tutte le direzioni nell'ordine modificato
   for (int8_t i = 0; i < 4; i++) {
     int8_t deltaRow = dirX[dirs[i]];
     int8_t deltaCol = dirY[dirs[i]];
     int8_t nextRow = row + deltaRow;
     int8_t nextCol = col + deltaCol;
+    
     if (isValid(nextRow, nextCol) && maze[nextRow][nextCol] == WALL) {
       maze[row + deltaRow/2][col + deltaCol/2] = EMPTY;
       generateMazeDFS(nextRow, nextCol);
@@ -169,7 +177,7 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
 }
 
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
-  // 1. Reset e generazione (invariata)
+  // 1. Reset e generazione
   for (uint8_t i = 0; i < ROWS; i++) {
       for (uint8_t j = 0; j < CHANNEL; j++) maze[i][j] = WALL;
   }
