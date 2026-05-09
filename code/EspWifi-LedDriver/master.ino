@@ -38,10 +38,42 @@ Point player4 = {ROWS - 1, 0};
 Point unpr = {-1, -1};
 
 // --- FUNZIONI DI LOGICA (Rimaste invariate) ---
+
+// funzioni logiche
 bool isValid(int8_t row, int8_t col) { return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1; }
+
 bool isValidinUnpr(int8_t row, int8_t col) { return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL; }
+
 bool samePoint(Point a, Point b){ return a.x == b.x && a.y == b.y; }
 
+// funzioni comunicazione con lo slave
+void sendCommandToSlave(char cmd) {
+  ledSerial.print('<');
+  ledSerial.print(cmd);
+  ledSerial.print('>');
+}
+
+void printUnpr(Point p, char colorCode) {
+  if(p.x == -1 || p.y == -1) return;
+  
+  // Invia allo Slave LED
+  ledSerial.print("<U,"); ledSerial.print(p.x); ledSerial.print(","); 
+  ledSerial.print(p.y); ledSerial.print(","); ledSerial.print(colorCode); ledSerial.print(">");
+  
+  // Invia all'ESP (Web)
+  Serial.print("<U,"); Serial.print(p.x); Serial.print(","); 
+  Serial.print(p.y); Serial.print(","); Serial.print(colorCode); Serial.print(">");
+}
+
+//funzioni comunicazione congiunta esp-slave
+void sendCommandToAll(char cmd) {
+  // Invia allo Slave (LED)
+  ledSerial.print('<'); ledSerial.print(cmd); ledSerial.print('>');
+  // Invia all'ESP (Sito Web)
+  Serial.print('<'); Serial.print(cmd); Serial.print('>');
+}
+
+//funzioni di generazione
 void generateMazeDFS(int8_t row, int8_t col) {
   maze[row][col] = EMPTY;
   static const int8_t dirX[] = {-2, 2, 0, 0};
@@ -129,24 +161,8 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
   return {-1, -1};
 }
 
-// --- COMUNICAZIONE CON SLAVE ---
-void sendCommandToSlave(char cmd) {
-  ledSerial.print('<');
-  ledSerial.print(cmd);
-  ledSerial.print('>');
-}
-
-void printUnpr(Point p, char colorCode) {
-  if(p.x == -1 || p.y == -1) return;
-  // Formatto il pacchetto: <U,x,y,colore>
-  ledSerial.print("<U");
-  ledSerial.write(p.x);
-  ledSerial.write(p.y);
-  ledSerial.print(colorCode);
-  ledSerial.print(">");
-}
-
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
+  // 1. Reset e generazione (invariata)
   for (uint8_t i = 0; i < ROWS; i++) {
       for (uint8_t j = 0; j < CHANNEL; j++) maze[i][j] = WALL;
   }
@@ -161,58 +177,61 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   if (pl3.x != -1 && pl3.y != -1) connectPlayerToMaze(pl3.x, pl3.y);
   if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y);
 
-  Serial.println("\n--- NUOVO LABIRINTO (Inviato allo Slave) ---");
-  
-  // Invio i dati allo slave riga per riga
+  // 2. Trasmissione Broadcast (LED + ESP)
   for(uint8_t i = 0; i < ROWS; i++) {
-    ledSerial.print("<R");
-    ledSerial.write(i); // Indice riga
+    // Intestazione pacchetto
+    ledSerial.print("<R,"); ledSerial.print(i); ledSerial.print(",");
+    Serial.print("<R,"); Serial.print(i); Serial.print(",");
+    
+    // Contenuto riga
     for(uint8_t j = 0; j < CHANNEL; j++) {
       ledSerial.print(maze[i][j]);
+      Serial.print(maze[i][j]);
     }
+    
+    // Chiusura pacchetto
     ledSerial.print(">");
-    delay(5); // Lascia tempo allo Slave di processare il buffer seriale
+    Serial.print(">");
+    
+    delay(10); // Pausa per dare tempo ai buffer seriali (Arduino Slave e ESP) di svuotarsi
   }
   
-  // Dico allo slave di aggiornare i led
-  sendCommandToSlave('S'); 
+  sendCommandToAll('S'); // Mostra a schermo e sui LED
 }
 
 // --- LOGICA DI GIOCO CONTINUA ---
 void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   switch (random(4)){
     case 0:
-      printUnpr(unpr, 'B'); // Bonus
-      sendCommandToSlave('S'); delay(1000);
-      printUnpr(unpr, 'E'); // Empty
-      sendCommandToSlave('S');
+      printUnpr(unpr, 'B'); 
+      sendCommandToAll('S'); delay(1000);
+      printUnpr(unpr, 'E'); 
+      sendCommandToAll('S');
       break;
     case 1:
-      Point p;
-      bool check = false;
+      Point p; bool check = false;
       do{
         p.x = random(CHANNEL); p.y = random(ROWS);
         if(isValidinUnpr(p.x, p.y) && !(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
             if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) check = true;
         }
       } while (!check);
-      printUnpr(p, 'M'); // Malus
-      sendCommandToSlave('S'); delay(1000);
+      printUnpr(p, 'M'); 
+      sendCommandToAll('S'); delay(1000);
       printUnpr(p, 'E'); 
-      sendCommandToSlave('S');
+      sendCommandToAll('S');
       break;
     case 2:
-      // Semplificato per brevità: blocca turno pl1 (come esempio)
-      printUnpr(pl1, 'W'); // Wall
-      sendCommandToSlave('S'); delay(1000);
+      printUnpr(pl1, 'W'); 
+      sendCommandToAll('S'); delay(1000);
       printUnpr(pl1, 'E');
-      sendCommandToSlave('S');
+      sendCommandToAll('S');
       break;
     case 3:
       printUnpr(unpr, 'M');
-      sendCommandToSlave('S'); delay(1000);
+      sendCommandToAll('S'); delay(1000);
       printUnpr(unpr, 'E');
-      sendCommandToSlave('S');
+      sendCommandToAll('S');
       break;
   }
 }
@@ -227,6 +246,7 @@ void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3
 void magnetDetection(){
   for(uint8_t k = 0; k < 4; k++) { podiumValue[k] = {-1, -1, 0}; }
   uint16_t reading;
+  
   for(byte j = 0; j < ROWS; j++){
     PORTB &= ~0b00001111; PORTB |= j;
     for(byte i = 0; i < CHANNEL; i++){
@@ -235,6 +255,7 @@ void magnetDetection(){
       analogRead(A0); reading = analogRead(A0);
       uint16_t baseline = sensorBaseline[j][i];
       uint16_t intensity = (reading > baseline) ? (reading - baseline) : (baseline - reading);
+      
       if(intensity > RANGE) {
         if (intensity > podiumValue[3].intensity) {
           int8_t pos = 3;
@@ -244,6 +265,16 @@ void magnetDetection(){
         }
       }
     }
+  }
+
+  // --- TRASMISSIONE MAGNETI ALL'ESP (WEB) ---
+  for (uint8_t k = 0; k < 4; k++) {
+    if (podiumValue[k].intensity > 0) {
+      Serial.print("<M,"); Serial.print(k); Serial.print(",");
+      Serial.print(podiumValue[k].x); Serial.print(",");
+      Serial.print(podiumValue[k].y); Serial.print(",");
+      Serial.print(podiumValue[k].intensity); Serial.print(">");
+    } 
   }
 }
 
@@ -261,8 +292,8 @@ void calibrateSensors() {
 }
 
 void resetCalibration (){
-  sendCommandToSlave('C'); // Clear striscia led
-  sendCommandToSlave('S'); // Show
+  sendCommandToAll('C'); // Clear striscia led e Web
+  sendCommandToAll('S'); // Aggiorna visiva
   calibrateSensors();
 }
 
