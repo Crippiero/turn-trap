@@ -217,16 +217,19 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
 }
 
 void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}) {   
-  // 1. Reset e generazione
+  // Reset e generazione
   for (uint8_t i = 0; i < ROWS; i++) {
-      for (uint8_t j = 0; j < CHANNEL; j++) maze[i][j] = WALL;
+      for (uint8_t j = 0; j < CHANNEL; j++){ 
+        maze[i][j] = WALL; 
+      }
   }
 
+  //partenza dal centro
   int8_t startX = (ROWS - 1) / 2;
   int8_t startY = (CHANNEL - 1) / 2;
-  
-  generateMazeDFS(startX, startY);
-  addOpenBorders();
+
+  generateMazeDFS(startX, startY); //chiamo la funzione che genera il labirinto
+  addOpenBorders(); //lo rendo piu "aperto"
   maze[startX][startY] = GOAL;
 
   if (pl1.x != -1 && pl1.y != -1) connectPlayerToMaze(pl1.x, pl1.y);
@@ -234,7 +237,7 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   if (pl3.x != -1 && pl3.y != -1) connectPlayerToMaze(pl3.x, pl3.y);
   if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y);
 
-  // 2. Trasmissione Broadcast (LED + ESP)
+  // Trasmissione (LED + ESP)
   for(uint8_t i = 0; i < ROWS; i++) {
     // Intestazione pacchetto
     ledSerial.print("<R,"); ledSerial.print(i); ledSerial.print(",");
@@ -256,37 +259,48 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   sendCommandToAll('S'); // Mostra a schermo e sui LED
 }
 
-// --- LOGICA DI GIOCO CONTINUA ---
+// --- funzioni di gioco ---
 void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   switch (random(4)){
-    case 0:
+    case 0: //doppio turno
       printUnpr(unpr, 'B'); 
-      sendCommandToAll('S'); delay(1000);
+      sendCommandToAll('S'); 
+      delay(1000);
       printUnpr(unpr, 'E'); 
       sendCommandToAll('S');
       break;
-    case 1:
-      Point p; bool check = false;
+    case 1://sopostamento casuale
+      Point p; 
+      bool check = false;
+
       do{
-        p.x = random(CHANNEL); p.y = random(ROWS);
+        p.x = random(CHANNEL); 
+        p.y = random(ROWS);
+
         if(inGame(p.x, p.y) && !(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
-            if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) check = true;
+          if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) {
+            check = true;
+          }
         }
       } while (!check);
+      
       printUnpr(p, 'M'); 
-      sendCommandToAll('S'); delay(1000);
+      sendCommandToAll('S'); 
+      delay(1000);
       printUnpr(p, 'E'); 
       sendCommandToAll('S');
       break;
-    case 2:
+    case 2: //blocca il turno a un 
       printUnpr(pl1, 'W'); 
-      sendCommandToAll('S'); delay(1000);
+      sendCommandToAll('S'); 
+      delay(1000);
       printUnpr(pl1, 'E');
       sendCommandToAll('S');
       break;
     case 3:
       printUnpr(unpr, 'M');
-      sendCommandToAll('S'); delay(1000);
+      sendCommandToAll('S'); 
+      delay(1000);
       printUnpr(unpr, 'E');
       sendCommandToAll('S');
       break;

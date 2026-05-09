@@ -69,14 +69,20 @@ void processCommand(String packet) {
       String rowData = packet.substring(secondComma + 1);
       
       if (rIdx >= 0 && rIdx < NUM_STRIPS) {
-        for (int x = 0; x < NUM_LEDS && x < rowData.length(); x++) {
-          char cell = rowData.charAt(x);
+        // --- BLOCCO R (Costruzione riga con Resolution) ---
+        for (int logicalX = 0; logicalX < rowData.length(); logicalX++) {
+          char cell = rowData.charAt(logicalX);
           uint32_t color = getColorFromChar(cell, rIdx);
           
-          //INVERSIONE A SERPENTINA
-          int physicalX = (rIdx % 2 != 0) ? (NUM_LEDS - 1 - x) : x; 
-          
-          strips[rIdx].setPixelColor(physicalX, color);
+          // Accende RESOLUTION LED per ogni casella logica
+          for (int r = 0; r < RESOLUTION; r++) {
+            int targetX = (logicalX * RESOLUTION) + r; 
+            
+            // Inversione a serpentina: se la riga (rIdx) è dispari, inverte l'indice fisico
+            int physicalX = (rIdx % 2 != 0) ? (NUM_LEDS - 1 - targetX) : targetX; 
+            
+            strips[rIdx].setPixelColor(physicalX, color);
+          }
         }
       }
     }
@@ -89,27 +95,33 @@ void processCommand(String packet) {
     
     if (c1 != -1 && c2 != -1 && c3 != -1) {
       int x = packet.substring(c1 + 1, c2).toInt();
-      int y = packet.substring(c2 + 1, c3).toInt(); // Y corrisponde alla striscia
+      int y = packet.substring(c2 + 1, c3).toInt(); // Y corrisponde all'indice della striscia
       char colorCode = packet.charAt(c3 + 1);
       
-      if (y >= 0 && y < NUM_STRIPS && x >= 0 && x < NUM_LEDS) {
+      // Verifica i limiti logici di X e Y
+      if (y >= 0 && y < NUM_STRIPS && x >= 0 && x < (NUM_LEDS / RESOLUTION)) {
         uint32_t color = getColorFromChar(colorCode, y);
         
-        //INVERSIONE A SERPENTINA
-        int physicalX = (y % 2 != 0) ? (NUM_LEDS - 1 - x) : x;
-        
-        strips[y].setPixelColor(physicalX, color);
+        // --- BLOCCO U (Singoli pixel con Resolution) ---
+        for(int r = 0; r < RESOLUTION; r++) {
+          int targetX = (x * RESOLUTION) + r;
+          
+          // Inversione a serpentina
+          int physicalX = (y % 2 != 0) ? (NUM_LEDS - 1 - targetX) : targetX;
+          
+          strips[y].setPixelColor(physicalX, color);
+        }
       }
     }
   } 
   else if (cmdType == 'C') {
-    // Pulisci tutte le strisce
+    // Comando Clear: Pulisce tutte le strisce
     for(int i = 0; i < NUM_STRIPS; i++) {
       strips[i].clear();
     }
   } 
   else if (cmdType == 'S') {
-    // Mostra (Applica le modifiche fisicamente ai LED)
+    // Comando Show: Applica le modifiche fisicamente ai LED
     for(int i = 0; i < NUM_STRIPS; i++) {
       strips[i].show();
     }
