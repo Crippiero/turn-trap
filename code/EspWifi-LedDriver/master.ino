@@ -52,7 +52,7 @@ bool isValid(int8_t row, int8_t col) {
   return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1; 
 }
 
-bool isValidinUnpr(int8_t row, int8_t col) { 
+bool inGame(int8_t row, int8_t col) { 
   return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL; 
 }
 
@@ -158,10 +158,10 @@ Point generateUnprPoint(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = 
     int8_t x = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     int8_t y = random(-UNPR_OFFSET, UNPR_OFFSET+ 1);
     switch (random(4)){
-      case 0: if (pl1.x != -1 && pl1.y != -1) { p.x = pl1.x + x; p.y = pl1.y + y; if (isValidinUnpr(p.x, p.y)) return p; } break;
-      case 1: if (pl2.x != -1 && pl2.y != -1) { p.x = pl2.x + x; p.y = pl2.y + y; if (isValidinUnpr(p.x, p.y)) return p; } break;
-      case 2: if (pl3.x != -1 && pl3.y != -1) { p.x = pl3.x + x; p.y = pl3.y + y; if (isValidinUnpr(p.x, p.y)) return p; } break;
-      case 3: if (pl4.x != -1 && pl4.y != -1) { p.x = pl4.x + x; p.y = pl4.y + y; if (isValidinUnpr(p.x, p.y)) return p; } break;
+      case 0: if (pl1.x != -1 && pl1.y != -1) { p.x = pl1.x + x; p.y = pl1.y + y; if (inGame(p.x, p.y)) return p; } break;
+      case 1: if (pl2.x != -1 && pl2.y != -1) { p.x = pl2.x + x; p.y = pl2.y + y; if (inGame(p.x, p.y)) return p; } break;
+      case 2: if (pl3.x != -1 && pl3.y != -1) { p.x = pl3.x + x; p.y = pl3.y + y; if (inGame(p.x, p.y)) return p; } break;
+      case 3: if (pl4.x != -1 && pl4.y != -1) { p.x = pl4.x + x; p.y = pl4.y + y; if (inGame(p.x, p.y)) return p; } break;
     }
     genTry++;
   }
@@ -219,7 +219,7 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       Point p; bool check = false;
       do{
         p.x = random(CHANNEL); p.y = random(ROWS);
-        if(isValidinUnpr(p.x, p.y) && !(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
+        if(inGame(p.x, p.y) && !(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
             if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) check = true;
         }
       } while (!check);
