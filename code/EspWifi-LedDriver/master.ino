@@ -283,7 +283,7 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       do{
         p.x = random(CHANNEL);
         p.y = random(ROWS);
-        if(isValidinUnpr(p.x, p.y)){
+        if(inGame(p.x, p.y)){
           if(!(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
             if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) {
               check = true;
