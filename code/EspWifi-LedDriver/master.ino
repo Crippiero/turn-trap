@@ -262,24 +262,25 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 // --- funzioni di gioco ---
 void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
   switch (random(4)){
-    case 0: //doppio turno
+    case 0: // Doppio turno
       printUnpr(unpr, 'B'); 
       sendCommandToAll('S'); 
       delay(1000);
       printUnpr(unpr, 'E'); 
       sendCommandToAll('S');
       break;
-    case 1://sopostamento casuale
-      Point p; 
+
+    case 1: // Spostamento casuale
+      Point p;
       bool check = false;
-
       do{
-        p.x = random(CHANNEL); 
+        p.x = random(CHANNEL);
         p.y = random(ROWS);
-
-        if(inGame(p.x, p.y) && !(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
-          if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) {
-            check = true;
+        if(isValidinUnpr(p.x, p.y)){
+          if(!(p.x == (ROWS - 1) / 2 && p.y == (CHANNEL - 1) / 2)) {
+            if (!samePoint(pl1, p) && !samePoint(pl2, p) && !samePoint(pl3, p) && !samePoint(pl4, p)) {
+              check = true;
+            }
           }
         }
       } while (!check);
@@ -290,14 +291,45 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
       printUnpr(p, 'E'); 
       sendCommandToAll('S');
       break;
-    case 2: //blocca il turno a un 
-      printUnpr(pl1, 'W'); 
-      sendCommandToAll('S'); 
-      delay(1000);
-      printUnpr(pl1, 'E');
-      sendCommandToAll('S');
+
+    case 2: // Blocca il turno a un giocatore casuale
+      {
+        uint8_t numPlayer = 0;
+        if (pl1.x != -1 && pl1.y != -1) numPlayer++;
+        if (pl2.x != -1 && pl2.y != -1) numPlayer++;
+        if (pl3.x != -1 && pl3.y != -1) numPlayer++;
+        if (pl4.x != -1 && pl4.y != -1) numPlayer++;
+        
+        printUnpr(unpr, 'E');
+
+        switch(random(numPlayer)){
+          case 0:
+            printUnpr(pl1, 'W');
+            sendCommandToAll('S'); delay(1000);
+            printUnpr(pl1, 'E');
+            break;
+          case 1:
+            printUnpr(pl2, 'W');
+            sendCommandToAll('S'); delay(1000);
+            printUnpr(pl2, 'E');
+            break;
+          case 2:
+            printUnpr(pl3, 'W');
+            sendCommandToAll('S'); delay(1000);
+            printUnpr(pl3, 'E');
+            break;
+          case 3:
+            printUnpr(pl4, 'W');
+            sendCommandToAll('S'); delay(1000);
+            printUnpr(pl4, 'E');
+            break;
+
+          sendCommandToAll('S');
+        }
+      }
       break;
-    case 3:
+
+    case 3: // Scambiarsi di posto con qualcuno
       printUnpr(unpr, 'M');
       sendCommandToAll('S'); 
       delay(1000);
