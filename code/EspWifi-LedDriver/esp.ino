@@ -270,14 +270,12 @@ const char htmlPage[] PROGMEM = R"=====(
 
 void setup() {
   // Connessione Seriale con l'Arduino Master
-  Serial.begin(9600); // Assicurati che coincida con la Serial() del Master (che nel tuo codice era 9600)
+  Serial.begin(9600); 
   
-  // Connessione WiFi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
-
+  // --- CREA LA RETE WIFI (Modalità Access Point) ---
+  // Invece di collegarsi a una rete, ne crea una sua!
+  WiFi.softAP(ssid, password);
+  
   // Gestione Server Web
   server.on("/", []() {
     server.send(200, "text/html", htmlPage);
