@@ -71,7 +71,11 @@ void processCommand(String packet) {
         for (int x = 0; x < NUM_LEDS && x < rowData.length(); x++) {
           char cell = rowData.charAt(x);
           uint32_t color = getColorFromChar(cell, rIdx);
-          strips[rIdx].setPixelColor(x, color);
+          
+          //INVERSIONE A SERPENTINA
+          int physicalX = (rIdx % 2 != 0) ? (NUM_LEDS - 1 - x) : x; 
+          
+          strips[rIdx].setPixelColor(physicalX, color);
         }
       }
     }
@@ -89,7 +93,11 @@ void processCommand(String packet) {
       
       if (y >= 0 && y < NUM_STRIPS && x >= 0 && x < NUM_LEDS) {
         uint32_t color = getColorFromChar(colorCode, y);
-        strips[y].setPixelColor(x, color);
+        
+        //INVERSIONE A SERPENTINA
+        int physicalX = (y % 2 != 0) ? (NUM_LEDS - 1 - x) : x;
+        
+        strips[y].setPixelColor(physicalX, color);
       }
     }
   } 
