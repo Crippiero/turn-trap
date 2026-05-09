@@ -427,9 +427,14 @@ void calibrateSensors() {
 }
 
 void resetCalibration (){
+  sendInfoToWeb("Calibrazione sensori in corso..."); // Avvisa il sito Web
+  
   sendCommandToAll('C'); // Clear striscia led e Web
   sendCommandToAll('S'); // Aggiorna visiva
-  calibrateSensors();
+  
+  calibrateSensors();    // Esegue la calibrazione (richiede qualche secondo)
+  
+  sendInfoToWeb("Calibrazione completata! Pronto."); // Avvisa che ha finito
 }
 
 void gamePlay(){
