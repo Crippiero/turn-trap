@@ -347,30 +347,47 @@ void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3
 
 // --- LETTURE SENSORI E MULTIPLEXER (Rimaste invariate) ---
 void magnetDetection(){
-  for(uint8_t k = 0; k < 4; k++) { podiumValue[k] = {-1, -1, 0}; }
+  for(uint8_t k = 0; k < 4; k++) { 
+    podiumValue[k] = {-1, -1, 0}; 
+  }
+
   uint16_t reading;
-  
+
+  // Ciclo esterno: scorro le righe (MUX Master) tramite PORTB
   for(byte j = 0; j < ROWS; j++){
-    PORTB &= ~0b00001111; PORTB |= j;
+    PORTB &= ~0b00001111; 
+    PORTB |= j;
+
+    // Ciclo interno: scorro le colonne (MUX Slave) tramite PORTD
     for(byte i = 0; i < CHANNEL; i++){
-      PORTD &= ~0b00111100; PORTD |= (i << 2);
+      PORTD &= ~0b00111100; 
+      PORTD |= (i << 2);
+
       delayMicroseconds(READINGS_DELAY);
-      analogRead(A0); reading = analogRead(A0);
+      analogRead(A0); //dummy read
+      reading = analogRead(A0);
+
       uint16_t baseline = sensorBaseline[j][i];
       uint16_t intensity = (reading > baseline) ? (reading - baseline) : (baseline - reading);
       
+      //salvo solo i 4 con valore maggiore
       if(intensity > RANGE) {
         if (intensity > podiumValue[3].intensity) {
           int8_t pos = 3;
+
           while (pos > 0 && intensity > podiumValue[pos - 1].intensity) { pos--; }
-          for (int8_t k = 3; k > pos; k--) { podiumValue[k] = podiumValue[k - 1]; }
+
+          for (int8_t k = 3; k > pos; k--) { 
+            podiumValue[k] = podiumValue[k - 1]; 
+          }
+
           podiumValue[pos] = {(int8_t)j, (int8_t)i, intensity};
         }
       }
     }
   }
 
-  // --- TRASMISSIONE MAGNETI ALL'ESP (WEB) ---
+  // trasmetto il podio all'esp
   for (uint8_t k = 0; k < 4; k++) {
     if (podiumValue[k].intensity > 0) {
       Serial.print("<M,"); Serial.print(k); Serial.print(",");
@@ -383,12 +400,20 @@ void magnetDetection(){
 
 void calibrateSensors() {
   for(byte j = 0; j < ROWS; j++) {
-    PORTB &= ~0b00001111; PORTB |= j;
+    PORTB &= ~0b00001111; 
+    PORTB |= j;
+
     for(byte i = 0; i < CHANNEL; i++) {
-      PORTD &= ~0b00111100; PORTD |= (i << 2);
+      PORTD &= ~0b00111100; 
+      PORTD |= (i << 2);
+
       delayMicroseconds(READINGS_DELAY);
+
       uint32_t sum = 0;
-      for(byte n = 0; n < 4; n++) { analogRead(A0); sum += analogRead(A0); }
+      for(byte n = 0; n < 4; n++) { 
+        analogRead(A0); 
+        sum += analogRead(A0); 
+      }
       sensorBaseline[j][i] = sum / 4; 
     }
   }
@@ -402,8 +427,13 @@ void resetCalibration (){
 
 void gamePlay(){
   delay(200);
-  magnetDetection(); 
-  player1 = {-1, -1}; player2 = {-1, -1}; player3 = {-1, -1}; player4 = {-1, -1};
+  magnetDetection();
+
+  player1 = {-1, -1}; 
+  player2 = {-1, -1}; 
+  player3 = {-1, -1}; 
+  player4 = {-1, -1};
+
   if (podiumValue[0].intensity > 0) player1 = {podiumValue[0].x, podiumValue[0].y};
   if (podiumValue[1].intensity > 0) player2 = {podiumValue[1].x, podiumValue[1].y};
   if (podiumValue[2].intensity > 0) player3 = {podiumValue[2].x, podiumValue[2].y};
@@ -412,21 +442,27 @@ void gamePlay(){
 
 void processSerialCommands() {
   if (Serial.available() < 4) return;
+
   if (Serial.peek() != SERIAL_START_BYTE) { Serial.read(); return; }
+
   Serial.read(); 
   uint8_t cmd = Serial.read();
   uint8_t len = Serial.read();
   uint8_t chk = Serial.read();
+
   if (chk != (cmd ^ len)) return; 
 
   switch (cmd) {
     case CMD_START:
       renderNewMaze(player1, player2, player3, player4);
       unpr = generateUnprPoint(player1, player2, player3, player4);
+
       delay(PRESS_DELAY);
       break;
+
     case CMD_RESET:
       resetCalibration();
+
       delay(PRESS_DELAY);
       break;
   }
@@ -439,18 +475,21 @@ void setup() {
     delay(SETUP_DELAY);
     randomSeed(analogRead(A2));
 
-    DDRD |= 0b00111100;
-    DDRB |= 0b00001111;
-    DDRC &= ~0b00000001;
+    DDRD |= 0b00111100; //Imposto i pin 2, 3, 4 e 5 come OUTPUT
+    DDRB |= 0b00001111; //Imposto i pin 8, 9, 10 e 11 come OUTPUT
+    DDRC &= ~0b00000001; //Imposto il pin A0 come INPUT
 
     calibrateSensors();
 }
 
 void loop() {
   processSerialCommands();
+
   unsigned long currentMillis = millis();
+
   if (currentMillis - previousGameMillis >= gameInterval) {
     previousGameMillis = currentMillis; 
+    
     gamePlay();
     
     printUnpr(unpr, 'U');
