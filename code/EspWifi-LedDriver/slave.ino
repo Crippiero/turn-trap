@@ -1,7 +1,8 @@
 #include <Adafruit_NeoPixel.h>
 
-#define NUM_LEDS 11
-#define NUM_STRIPS 11 // 12 Strisce in totale (dai Pin 2 al 12)
+#define NUM_LEDS 22      // 11 caselle * 2 LED = 22 LED fisici
+#define NUM_STRIPS 11    // Dal pin 2 al 12
+#define RESOLUTION 2     // LED per ogni casella logica
 
 // Creiamo un array per contenere le striscie. 
 Adafruit_NeoPixel strips[NUM_STRIPS] = {
@@ -23,7 +24,7 @@ String packetBuffer = "";
 void setup() {
   // Avvia la comunicazione con il Master
   // Assicurati che il TX del Master sia collegato all'RX (Pin 0) di questo Slave
-  Serial.begin(9600); 
+  Serial.begin(38400); 
   
   // Riserva un po' di memoria per evitare frammentazione della RAM
   packetBuffer.reserve(50);

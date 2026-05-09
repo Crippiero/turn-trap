@@ -3,15 +3,17 @@
 SoftwareSerial ledSerial(6, 7); //6=RX 7=TX
 
 constexpr uint8_t CHANNEL = 11;
-constexpr uint8_t ROWS = 11; 
+constexpr uint8_t ROWS = 11;
+
 constexpr uint8_t UNPR_OFFSET = 2;
-constexpr uint8_t READINGS_DELAY = 1;
-constexpr uint16_t RANGE = 50; 
 
 constexpr char WALL = '#';
 constexpr char EMPTY = 'x';
 constexpr char GOAL = 'G';
 constexpr char UNPR_simbol = 'U';
+
+constexpr uint8_t READINGS_DELAY = 1;
+constexpr uint16_t RANGE = 50; 
 
 constexpr uint16_t LOOP_DELAY = 10;
 constexpr uint16_t PRESS_DELAY = 300;
@@ -24,12 +26,18 @@ constexpr uint8_t CMD_RESET = 0x02;
 unsigned long previousGameMillis = 0;
 const unsigned long gameInterval = 200;
 
-struct Podium { int8_t x, y; uint16_t intensity; };
-struct Point { int8_t x, y; };
+struct Podium { 
+  int8_t x, y; 
+  uint16_t intensity; 
+};
+
+struct Point { 
+  int8_t x, y; 
+};
 
 Podium podiumValue[4];
 char maze[ROWS][CHANNEL];
-uint16_t sensorBaseline[ROWS][CHANNEL]; 
+uint16_t sensorBaseline[ROWS][CHANNEL]; // Contiene il valore a riposo di ogni sensore per usarlo come punto zero
 
 Point player1 = {0, 0};
 Point player2 = {0, CHANNEL - 1};
@@ -37,22 +45,22 @@ Point player3 = {ROWS - 1, CHANNEL - 1};
 Point player4 = {ROWS - 1, 0};
 Point unpr = {-1, -1};
 
-// --- FUNZIONI DI LOGICA (Rimaste invariate) ---
+// --- FUNZIONI ---
 
-// funzioni logiche
-bool isValid(int8_t row, int8_t col) { return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1; }
-
-bool isValidinUnpr(int8_t row, int8_t col) { return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL; }
-
-bool samePoint(Point a, Point b){ return a.x == b.x && a.y == b.y; }
-
-// funzioni comunicazione con lo slave
-void sendCommandToSlave(char cmd) {
-  ledSerial.print('<');
-  ledSerial.print(cmd);
-  ledSerial.print('>');
+// -- funzioni logiche --
+bool isValid(int8_t row, int8_t col) { 
+  return row > 0 && row < ROWS - 1 && col > 0 && col < CHANNEL - 1; 
 }
 
+bool isValidinUnpr(int8_t row, int8_t col) { 
+  return row >= 0 && row < ROWS && col >= 0 && col < CHANNEL; 
+}
+
+bool samePoint(Point a, Point b){ 
+  return a.x == b.x && a.y == b.y; 
+}
+
+// -- funzioni comunicazione seriale --
 void printUnpr(Point p, char colorCode) {
   if(p.x == -1 || p.y == -1) return;
   
@@ -65,7 +73,6 @@ void printUnpr(Point p, char colorCode) {
   Serial.print(p.y); Serial.print(","); Serial.print(colorCode); Serial.print(">");
 }
 
-//funzioni comunicazione congiunta esp-slave
 void sendCommandToAll(char cmd) {
   // Invia allo Slave (LED)
   ledSerial.print('<'); ledSerial.print(cmd); ledSerial.print('>');
@@ -351,7 +358,7 @@ void loop() {
     gamePlay();
     
     printUnpr(unpr, 'U');
-    sendCommandToSlave('S'); // Mostra su led
+    sendCommandToAll('S'); // Mostra su led
     
     checkUnpr(unpr, player1, player2, player3, player4);
   }
