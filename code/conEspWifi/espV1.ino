@@ -70,6 +70,8 @@ void loop() {
 
 // ---------------- WEB PAGE ----------------
 
+// ---------------- WEB PAGE ----------------
+
 void handleRoot() {
   String page = R"rawliteral(
     <!DOCTYPE html>
@@ -82,15 +84,12 @@ void handleRoot() {
           .btn-start { background-color: #4CAF50; color: white; }
           .btn-reset { background-color: #f44336; color: white; }
           
-          /* Stile per i Dati Extra */
           .data-box { margin: 20px auto; padding: 15px; width: 90%; max-width: 400px; background: #fff; border-left: 5px solid #2196F3; font-weight: bold; display: none; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); text-align: left; white-space: pre-line;}
           
-          /* Stile per il Labirinto */
           .maze-container { margin: 20px auto; background-color: #333; padding: 15px; display: inline-block; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); }
           .row { display: flex; justify-content: center; }
           .cell { width: 22px; height: 22px; margin: 1px; border-radius: 3px; }
           
-          /* Stile per i Log grezzi */
           textarea { width: 90%; max-width: 500px; height: 100px; font-family: monospace; font-size: 12px; margin-top: 20px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
         </style>
       </head>
@@ -122,12 +121,10 @@ void handleRoot() {
                 if(data.length > 0) {
                   fullLog += data;
                   
-                  // Aggiorna il box dei log testuali
                   let logBox = document.getElementById('logBox');
                   logBox.value += data;
                   logBox.scrollTop = logBox.scrollHeight;
                   
-                  // Evita che la variabile Javascript esploda in RAM
                   if(fullLog.length > 15000) fullLog = fullLog.substring(fullLog.length - 5000);
                   
                   parseMazeAndData();
@@ -135,75 +132,72 @@ void handleRoot() {
               });
           }, 1000);
 
-          // Funzione "Magica" che interpreta il testo
           function parseMazeAndData() {
-            let marker1 = "%------------%";
-            let marker2 = "--- NUOVO LABIRINTO ---";
+            let lines = fullLog.split('\n');
+            let latestMazeLines = [];
+            let tempMazeLines = [];
+            let extraDataLines = [];
             
-            // Cerca l'ultimo aggiornamento ricevuto (partendo dalla fine)
-            let idx1 = fullLog.lastIndexOf(marker1);
-            if (idx1 !== -1) {
-              let idx2 = fullLog.indexOf(marker2, idx1);
-              if (idx2 !== -1) {
+            for(let i = 0; i < lines.length; i++) {
+              let line = lines[i].trim();
+              if (line.length === 0) continue;
+              
+              if (/^[x#G\s]+$/.test(line)) {
+                tempMazeLines.push(line);
                 
-                // 1. ESTRAI I DATI EXTRA
-                // Prende tutto ciò che c'è tra "%----%" e "--- NUOVO LABIRINTO ---"
-                let rawData = fullLog.substring(idx1 + marker1.length, idx2).trim();
-                let dataBox = document.getElementById('dataBox');
-                
-                if (rawData.length > 0) {
-                  dataBox.innerText = rawData;
-                  dataBox.style.display = 'block';
-                } else {
-                  dataBox.style.display = 'none';
+                // 🔥 NUOVA REGOLA: Se arriviamo a 11 righe, il labirinto è completo!
+                if (tempMazeLines.length === 11) {
+                  latestMazeLines = [...tempMazeLines]; // Salviamo il labirinto
+                  tempMazeLines = [];                   // Resettiamo per il prossimo
                 }
-
-                // 2. ESTRAI E DISEGNA IL LABIRINTO
-                let mazeStr = fullLog.substring(idx2 + marker2.length).trim();
-                let lines = mazeStr.split('\n');
-                let mazeLines = [];
-                
-                // Filtra solo le righe che contengono i caratteri del labirinto
-                for(let i = 0; i < lines.length; i++) {
-                  let line = lines[i].trim();
-                  if (/^[x#G\s]+$/.test(line) && line.length > 0) {
-                    mazeLines.push(line);
-                  } else if (mazeLines.length > 0) {
-                    // Appena trova una riga che non c'entra niente, ferma la lettura del labirinto
-                    break;
-                  }
+              } else {
+                if (tempMazeLines.length > 0) {
+                  latestMazeLines = [...tempMazeLines];
+                  tempMazeLines = [];
                 }
-                
-                // Se c'è un labirinto ed è diverso dal precedente, lo disegna (evita sfarfallii)
-                let currentMazeStr = mazeLines.join('|');
-                if (mazeLines.length > 0 && currentMazeStr !== lastRenderedMaze) {
-                  lastRenderedMaze = currentMazeStr;
-                  renderMaze(mazeLines);
-                }
+                extraDataLines.push(line);
               }
+            }
+            
+            // Mostra anche labirinti a metà (se sta ancora caricando le righe 1-10)
+            if (tempMazeLines.length > 0) {
+              latestMazeLines = [...tempMazeLines];
+            }
+
+            let dataBox = document.getElementById('dataBox');
+            if (extraDataLines.length > 0) {
+              let recentData = extraDataLines.slice(-8).join('\n');
+              dataBox.innerText = recentData;
+              dataBox.style.display = 'block';
+            } else {
+              dataBox.style.display = 'none';
+            }
+
+            let currentMazeStr = latestMazeLines.join('|');
+            if (latestMazeLines.length > 0 && currentMazeStr !== lastRenderedMaze) {
+              lastRenderedMaze = currentMazeStr;
+              renderMaze(latestMazeLines);
             }
           }
 
           function renderMaze(lines) {
             let container = document.getElementById('mazeContainer');
-            container.innerHTML = ''; // Pulisce il contenitore
+            container.innerHTML = ''; 
             
             lines.forEach(line => {
               let rowDiv = document.createElement('div');
               rowDiv.className = 'row';
               
-              // Rimuove gli spazi e crea un array di caratteri
               let chars = line.replace(/\s/g, '').split('');
               
               chars.forEach(c => {
                 let cell = document.createElement('div');
                 cell.className = 'cell';
                 
-                // ASSEGNAZIONE COLORI
-                if (c === '#') cell.style.backgroundColor = '#ff4d4d'; // Rosso
-                else if (c === 'x') cell.style.backgroundColor = '#ffffff'; // Bianco
-                else if (c === 'G') cell.style.backgroundColor = '#9b59b6'; // Viola
-                else cell.style.backgroundColor = 'transparent'; // Sicurezza
+                if (c === '#') cell.style.backgroundColor = '#ff4d4d'; 
+                else if (c === 'x') cell.style.backgroundColor = '#ffffff'; 
+                else if (c === 'G') cell.style.backgroundColor = '#9b59b6'; 
+                else cell.style.backgroundColor = 'transparent'; 
                 
                 rowDiv.appendChild(cell);
               });
