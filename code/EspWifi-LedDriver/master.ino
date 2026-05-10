@@ -39,6 +39,58 @@ struct Point {
   int8_t x, y;
 };
 
+class NeopixelFake {
+  private:
+    uint16_t numLEDs;
+    int16_t pin;
+    SoftwareSerial swSerial;
+
+  public:
+    // Costruttore: usiamo i pin 6 (RX) e 7 (TX) per non intralciare il tuo MUX sui pin 8-11
+    NeopixelFake(uint16_t n, int16_t p) 
+      : numLEDs(n), pin(p), swSerial(6, 7) {
+    }
+
+    // Inizializza la SoftwareSerial
+    void begin() {
+      swSerial.begin(9600);
+    }
+
+    // Invia il comando di aggiornamento striscia
+    void show() {
+      swSerial.println("SHOW");
+    }
+
+    // Invia il comando per spegnere tutto
+    void clear() {
+      swSerial.println("CLEAR");
+    }
+
+    // Intercetta l'impostazione del colore (riceve il colore a 32bit dal tuo codice)
+    void setPixelColor(uint16_t n, uint32_t c) {
+      // Estrapoliamo i singoli canali RGB per facilitare la lettura all'altro Arduino
+      uint8_t r = (uint8_t)(c >> 16);
+      uint8_t g = (uint8_t)(c >>  8);
+      uint8_t b = (uint8_t)c;
+      
+      swSerial.print("SET,");
+      swSerial.print(n);
+      swSerial.print(",");
+      swSerial.print(r);
+      swSerial.print(",");
+      swSerial.print(g);
+      swSerial.print(",");
+      swSerial.println(b);
+    }
+
+    // Funzione statica per simulare strip.Color() e compattare RGB in 32 bit
+    static uint32_t Color(uint8_t r, uint8_t g, uint8_t b) {
+      return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
+    }
+};
+
+NeopixelFake strip(NUMPIXELS, PIN);
+
 Podium podiumValue[4];
 char maze[ROWS][CHANNEL];
 uint16_t sensorBaseline[ROWS][CHANNEL]; // Contiene il valore a riposo di ogni sensore per usarlo come punto zero
