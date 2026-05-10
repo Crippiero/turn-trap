@@ -53,7 +53,7 @@ class NeopixelFake {
 
     // Inizializza la SoftwareSerial
     void begin() {
-      swSerial.begin(9600);
+      swSerial.begin(57600);
     }
 
     // Invia il comando di aggiornamento striscia
@@ -100,7 +100,7 @@ Point player2 = {0, CHANNEL - 1};
 Point player3 = {ROWS - 1, CHANNEL - 1};
 Point player4 = {ROWS - 1, 0};
 
-Point unpr = {-1, -1};
+Point unpr = {-2, -2};
 
 // Variabili per pre-calcolare i colori (risparmia molta CPU nel loop)
 uint32_t colorWall;
@@ -319,7 +319,7 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
   if (pl4.x != -1 && pl4.y != -1) connectPlayerToMaze(pl4.x, pl4.y);
 
   // 4. Stampa su led neopixel
-  Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
+  //Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
   
   for(uint8_t i = 0; i < ROWS; i++) {
     for(uint8_t j = 0; j < CHANNEL; j++) {
@@ -422,18 +422,20 @@ void getUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 =
   }
 }
 
-void checkUnpr(Point unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
-  if(pl1.x == unpr.x && pl1.y == unpr.y){
-    getUnpr(unpr);
-  }
-  else if(pl2.x == unpr.x && pl2.y == unpr.y){
-    getUnpr(unpr);
-  }
-  else if(pl3.x == unpr.x && pl3.y == unpr.y){
-    getUnpr(unpr);
-  }
-  else if(pl4.x == unpr.x && pl4.y == unpr.y){
-    getUnpr(unpr);
+// Aggiunta la & prima di unpr per passarlo per riferimento
+void checkUnpr(Point &unpr, Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, -1}, Point pl4 = {-1, -1}){
+  bool triggered = false;
+  
+  // Controlliamo se qualcuno ci è finito sopra
+  if(pl1.x == unpr.x && pl1.y == unpr.y){ triggered = true; }
+  else if(pl2.x == unpr.x && pl2.y == unpr.y){ triggered = true; }
+  else if(pl3.x == unpr.x && pl3.y == unpr.y){ triggered = true; }
+  else if(pl4.x == unpr.x && pl4.y == unpr.y){ triggered = true; }
+
+  // Se è scattato, facciamo l'effetto e lo distruggiamo
+  if (triggered) {
+    getUnpr(unpr);   // Attiva bonus/malus
+    unpr = {-2, -2}; // "Spegne" il punto per evitare loop infiniti!
   }
 }
 
@@ -520,7 +522,7 @@ void magnetDetection(){
     }
   }
   //stampa sulla seriale per debug e per l'ESP
-  Serial.println("%------------%");
+  //Serial.println("%------------%");
   for (uint8_t k = 0; k < 4; k++) {
     if (podiumValue[k].intensity > 0) {
       // Stampe di debug
@@ -652,7 +654,7 @@ void processSerialCommands() {
 
 // --- SETUP E LOOP ARDUINO ---
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(57600);
     Serial.println("Calibrazione in corso... NON avvicinare magneti!");
 
     delay(SETUP_DELAY);
@@ -696,8 +698,10 @@ void loop() {
 
     gamePlay();
     
-    printUnpr(unpr, colorUnpr);
-    checkUnpr(unpr, player1, player2, player3, player4);
+    if (unpr.x != -2 && unpr.y != -2) {
+      printUnpr(unpr, colorUnpr);
+      checkUnpr(unpr, player1, player2, player3, player4);
+    }
 
     strip.show();
   }
