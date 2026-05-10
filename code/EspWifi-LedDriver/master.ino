@@ -320,6 +320,7 @@ void renderNewMaze(Point pl1 = {-1, -1}, Point pl2 = {-1, -1}, Point pl3 = {-1, 
 
   // 4. Stampa su led neopixel
   //Serial.println("\n--- NUOVO LABIRINTO ---"); //debug
+  Serial.println("");
   
   for(uint8_t i = 0; i < ROWS; i++) {
     for(uint8_t j = 0; j < CHANNEL; j++) {
