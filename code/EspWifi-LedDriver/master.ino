@@ -23,9 +23,11 @@ constexpr uint16_t LOOP_DELAY = 10;
 constexpr uint16_t PRESS_DELAY = 300;
 constexpr uint16_t SETUP_DELAY = 30;
 
-constexpr uint8_t SERIAL_START_BYTE = 0xAA;
+constexpr uint8_t START_BYTE = 0xAA;
 constexpr uint8_t CMD_START = 0x01;
 constexpr uint8_t CMD_RESET = 0x02;
+constexpr uint8_t CMD_START_RESET = 0x03;
+constexpr uint8_t CMD_END_RESET = 0x04;
 
 unsigned long previousGameMillis = 0;
 const unsigned long gameInterval = 200;
@@ -87,6 +89,24 @@ class NeopixelFake {
     static uint32_t Color(uint8_t r, uint8_t g, uint8_t b) {
       return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
     }
+
+    void send(uint8_t cmd, uint8_t* data, uint8_t len) {
+      uint8_t checksum = 0;
+
+      swSerial.write(START_BYTE);
+      swSerial.write(cmd);
+      swSerial.write(len);
+
+      checksum ^= cmd;
+      checksum ^= len;
+
+      for (int i = 0; i < len; i++) {
+        swSerial.write(data[i]);
+        checksum ^= data[i];
+      }
+
+      swSerial.write(checksum);
+    }
 };
 
 NeopixelFake strip(NUMPIXELS, PIN);
@@ -122,6 +142,24 @@ bool isValidinUnpr(int8_t row, int8_t col) {
 
 bool samePoint(Point a, Point b){
     return a.x == b.x && a.y == b.y;
+}
+
+void sendPacket(uint8_t cmd, uint8_t* data, uint8_t len) {
+  uint8_t checksum = 0;
+
+  Serial.write(START_BYTE);
+  Serial.write(cmd);
+  Serial.write(len);
+
+  checksum ^= cmd;
+  checksum ^= len;
+
+  for (int i = 0; i < len; i++) {
+    Serial.write(data[i]);
+    checksum ^= data[i];
+  }
+
+  Serial.write(checksum);
 }
 
 void generateMazeDFS(int8_t row, int8_t col) {
@@ -526,7 +564,6 @@ void magnetDetection(){
   //Serial.println("%------------%");
   for (uint8_t k = 0; k < 4; k++) {
     if (podiumValue[k].intensity > 0) {
-      // Stampe di debug
       Serial.print("Magnete "); Serial.print(k);
       Serial.print(" in: X="); Serial.print(podiumValue[k].x);
       Serial.print(" Y="); Serial.print(podiumValue[k].y);
@@ -560,27 +597,7 @@ void calibrateSensors() {
 }
 
 void resetCalibration (uint8_t _delay = 1000){
-  Serial.println("Inizio Procedura di Setup/Reset...");
-  Serial.println("Assicurati che TUTTE le pedine siano rimosse!");
-  
-  // Un piccolo delay per dare il tempo di togliere le mani/pedine se necessario
-  Serial.print(".");
-  delay(_delay /6);
-  Serial.print(".");
-  delay(_delay /6);
-  Serial.println(".");
-  delay(_delay /6);
-
-  Serial.print(".");
-  delay(_delay /6);
-  Serial.print(".");
-  delay(_delay /6);
-  Serial.println(".");
-  delay(_delay /6);
-
-  // Eseguiamo direttamente la calibrazione senza aspettare pulsanti fisici, 
-  // dato che il comando è arrivato via seriale.
-  Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+  sendPacket(CMD_START_RESET, nullptr, 0);
 
   randomSeed(analogRead(A2));
 
@@ -589,8 +606,7 @@ void resetCalibration (uint8_t _delay = 1000){
 
   calibrateSensors();
 
-  Serial.println("Calibrazione completata!");
-  Serial.println("Posizionare le pedine agli angoli della partita e inviare comando START");
+  sendPacket(CMD_END_RESET, nullptr, 0);
 }
 
 void gamePlay(){
@@ -616,7 +632,7 @@ void processSerialCommands() {
   }
 
   // 2. Sincronizzazione: se il primo byte non è START, lo scartiamo.
-  if (Serial.peek() != SERIAL_START_BYTE) {
+  if (Serial.peek() != START_BYTE) {
     Serial.read(); // Rimuove la spazzatura dal buffer
     return;        // Usciamo per far ripartire il controllo al prossimo giro
   }
@@ -656,7 +672,7 @@ void processSerialCommands() {
 // --- SETUP E LOOP ARDUINO ---
 void setup() {
     Serial.begin(57600);
-    Serial.println("Calibrazione in corso... NON avvicinare magneti!");
+    sendPacket(CMD_START_RESET, nullptr, 0);
 
     delay(SETUP_DELAY);
 
@@ -686,7 +702,7 @@ void setup() {
 
     //riempio sensorBaseline con il valore di base per quello specifico sensore
     calibrateSensors();
-    Serial.println("Calibrazione completata!");
+    sendPacket(CMD_END_RESET, nullptr, 0);
 }
 
 void loop() {

@@ -9,7 +9,9 @@ SoftwareSerial UNO(14, 12); // D5 = RX, D6 = TX
 
 enum Command {
   CMD_START = 0x01,
-  CMD_RESET = 0x02
+  CMD_RESET = 0x02,
+  CMD_START_RESET = 0x03, // 🔥 Nuovo comando Arduino -> ESP
+  CMD_END_RESET = 0x04    // 🔥 Nuovo comando Arduino -> ESP
 };
 
 const char* ssid = "Turn&Trap";
@@ -55,11 +57,58 @@ void loop() {
     delay(200);
   }
 
-  // 🔥 FORWARD: Arduino UNO → PC e accumulo nel buffer Web
+  // 🔥 MACCHINA A STATI: Rilevamento pacchetti binari o testo ASCII
+  static enum { RX_IDLE, RX_CMD, RX_LEN, RX_DATA, RX_CHK } rxState = RX_IDLE;
+  static uint8_t rxCmd = 0;
+  static uint8_t rxLen = 0;
+  static uint8_t rxCalcChk = 0;
+  static uint8_t rxIndex = 0;
+
   while (UNO.available()) {
-    char c = UNO.read();
-    Serial.write(c);       
-    serialBuffer += c;     
+    uint8_t c = UNO.read();
+
+    if (rxState == RX_IDLE) {
+      if (c == START_BYTE) {
+        // Trovato l'inizio di un pacchetto binario
+        rxState = RX_CMD;
+        rxCalcChk = 0;
+      } else {
+        // Non è un pacchetto, trattalo come normale output testuale (Labirinto/Log)
+        Serial.write((char)c);       
+        serialBuffer += (char)c;     
+      }
+    } 
+    else if (rxState == RX_CMD) {
+      rxCmd = c;
+      rxCalcChk ^= c;
+      rxState = RX_LEN;
+    } 
+    else if (rxState == RX_LEN) {
+      rxLen = c;
+      rxCalcChk ^= c;
+      rxIndex = 0;
+      if (rxLen > 0) rxState = RX_DATA;
+      else rxState = RX_CHK;
+    } 
+    else if (rxState == RX_DATA) {
+      // Consuma i byte di dati (anche se nel tuo caso la len è 0, lo mettiamo per robustezza)
+      rxCalcChk ^= c;
+      rxIndex++;
+      if (rxIndex >= rxLen) rxState = RX_CHK;
+    } 
+    else if (rxState == RX_CHK) {
+      if (c == rxCalcChk) {
+        // PACCHETTO RICEVUTO CORRETTAMENTE DA ARDUINO!
+        if (rxCmd == CMD_START_RESET) {
+          serialBuffer += "\n[[START_RESET]]\n"; // Segnale per la WebPage
+          Serial.println("\n[DEBUG] Ricevuto CMD_START_RESET da UNO");
+        } else if (rxCmd == CMD_END_RESET) {
+          serialBuffer += "\n[[END_RESET]]\n";   // Segnale per la WebPage
+          Serial.println("\n[DEBUG] Ricevuto CMD_END_RESET da UNO");
+        }
+      }
+      rxState = RX_IDLE; // Torna in ascolto
+    }
   }
 
   // Limite di sicurezza per non riempire la RAM dell'ESP
@@ -83,7 +132,7 @@ void handleRoot() {
             text-align: center; 
             margin: 0; 
             padding: 20px; 
-            background-color: #121212; /* Tema scuro elegante */
+            background-color: #121212; 
             color: #ffffff; 
           }
           h1 { color: #4CAF50; font-weight: 600; margin-bottom: 30px;}
@@ -138,11 +187,11 @@ void handleRoot() {
             height: 24px; 
             margin: 2px; 
             border-radius: 4px; 
-            box-shadow: inset 0 0 3px rgba(0,0,0,0.4); /* Effetto profondità */
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.4); 
           }
           
           #debugSection {
-            display: none; /* Nascosto di default */
+            display: none; 
             margin-top: 30px;
           }
           
@@ -156,14 +205,55 @@ void handleRoot() {
             border-radius: 8px; 
             border: 1px solid #333; 
             background-color: #000; 
-            color: #0f0; /* Stile terminale verde su nero */
+            color: #0f0; 
             resize: none;
             box-shadow: inset 0px 0px 8px rgba(0,255,0,0.1);
+          }
+
+          /* 🔥 STILI PER L'OVERLAY DI AVVISO */
+          .overlay {
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); 
+            z-index: 9999;
+            display: none; /* Nascosto di default */
+            justify-content: center; 
+            align-items: center;
+            text-align: center; 
+            color: white;
+            backdrop-filter: blur(5px);
+          }
+          .overlay-content {
+            background: #d32f2f; 
+            padding: 40px; 
+            border-radius: 15px;
+            border: 4px solid #fff; 
+            max-width: 80%;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: pulse 1.5s infinite alternate;
+          }
+          .overlay h2 { margin-top: 0; font-size: 32px; color: #fff;}
+          .overlay p { font-size: 22px; font-weight: bold; margin-bottom: 10px;}
+          
+          @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
           }
         </style>
       </head>
       <body>
-        <h1>Turn&Trap</h1>
+        
+        <div id="resetOverlay" class="overlay">
+           <div class="overlay-content">
+             <h2>⚠️ ATTENZIONE ⚠️</h2>
+             <p>Macchina in fase di movimento e ripristino...</p>
+             <p>Rimuovere immediatamente le pedine!</p>
+             <p style="color: #ffeb3b; font-size: 26px;">NON TOCCARE IL LABIRINTO</p>
+           </div>
+        </div>
+
+        <h1>ESP Control Panel</h1>
 
         <div>
           <button class="btn btn-start" onclick="fetch('/start')">START</button>
@@ -185,7 +275,6 @@ void handleRoot() {
           let fullLog = "";
           let lastRenderedMaze = "";
 
-          // Funzione per mostrare/nascondere il terminale
           function toggleDebug() {
             let debugSec = document.getElementById('debugSection');
             if (debugSec.style.display === "none" || debugSec.style.display === "") {
@@ -222,19 +311,27 @@ void handleRoot() {
             for(let i = 0; i < lines.length; i++) {
               let line = lines[i].trim();
               
-              // 🔥 NUOVA LOGICA: Riga vuota = inizio nuovo blocco. Resettiamo l'array temporaneo.
+              // 🔥 GESTIONE SEGNALI BINARI CONVERTITI
+              if (line === "[[START_RESET]]") {
+                document.getElementById('resetOverlay').style.display = 'flex';
+                continue;
+              }
+              if (line === "[[END_RESET]]") {
+                document.getElementById('resetOverlay').style.display = 'none';
+                continue;
+              }
+              
+              // Logica Labirinto e dati
               if (line.length === 0) {
                 if (tempMazeLines.length === 11) {
-                  latestMazeLines = [...tempMazeLines]; // Salva se era completo
+                  latestMazeLines = [...tempMazeLines]; 
                 }
-                tempMazeLines = []; // Svuota per accogliere il nuovo labirinto
+                tempMazeLines = []; 
                 continue;
               }
               
               if (/^[x#G\s]+$/.test(line)) {
                 tempMazeLines.push(line);
-                
-                // Se arriviamo a 11 righe, il labirinto è completo!
                 if (tempMazeLines.length === 11) {
                   latestMazeLines = [...tempMazeLines];
                 }
@@ -243,12 +340,10 @@ void handleRoot() {
               }
             }
             
-            // Mostra labirinti parziali solo se non abbiamo ancora un labirinto completo valido
             if (latestMazeLines.length === 0 && tempMazeLines.length > 0) {
               latestMazeLines = [...tempMazeLines];
             }
 
-            // Gestione dei dati testuali
             let dataBox = document.getElementById('dataBox');
             if (extraDataLines.length > 0) {
               let recentData = extraDataLines.slice(-8).join('\n');
@@ -258,7 +353,6 @@ void handleRoot() {
               dataBox.style.display = 'none';
             }
 
-            // Aggiornamento grafico del labirinto
             let currentMazeStr = latestMazeLines.join('|');
             if (latestMazeLines.length > 0 && currentMazeStr !== lastRenderedMaze) {
               lastRenderedMaze = currentMazeStr;
@@ -280,10 +374,9 @@ void handleRoot() {
                 let cell = document.createElement('div');
                 cell.className = 'cell';
                 
-                // I colori rimangono invariati rispetto alla tua richiesta
-                if (c === '#') cell.style.backgroundColor = '#ff4d4d';       // Rosso
-                else if (c === 'x') cell.style.backgroundColor = '#ffffff';  // Bianco
-                else if (c === 'G') cell.style.backgroundColor = '#9b59b6';  // Viola
+                if (c === '#') cell.style.backgroundColor = '#ff4d4d';       
+                else if (c === 'x') cell.style.backgroundColor = '#ffffff';  
+                else if (c === 'G') cell.style.backgroundColor = '#9b59b6';  
                 else cell.style.backgroundColor = 'transparent'; 
                 
                 rowDiv.appendChild(cell);
