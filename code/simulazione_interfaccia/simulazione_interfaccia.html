@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>turn & trap</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #121212; 
+            color: #ffffff; 
+        }
+        h1 { color: #4CAF50; font-weight: 600; margin-bottom: 30px;}
+        
+        .btn { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            border: none; 
+            font-weight: bold; 
+            color: white;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn-start { background-color: #2e7d32; }
+        .btn-start:hover { background-color: #1b5e20; }
+        .btn-reset { background-color: #d32f2f; }
+        .btn-reset:hover { background-color: #b71c1c; }
+        .btn-debug { background-color: #0277bd; }
+        .btn-debug:hover { background-color: #01579b; }
+        
+        .data-box { 
+            margin: 20px auto; 
+            padding: 15px; 
+            width: 90%; 
+            max-width: 400px; 
+            background: #1e1e1e; 
+            border-left: 5px solid #0277bd; 
+            font-weight: 500; 
+            display: block; 
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.5); 
+            text-align: left; 
+            white-space: pre-line;
+            border-radius: 6px;
+            color: #e0e0e0;
+        }
+        
+        /* Struttura della Griglia Bloccata 11x11 */
+        .maze-container { 
+            margin: 20px auto; 
+            background-color: #1e1e1e; 
+            padding: 15px; 
+            display: inline-block; 
+            border-radius: 12px; 
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.6); 
+        }
+        .row { 
+            display: flex; 
+            justify-content: center; 
+        }
+        .cell { 
+            width: 26px; 
+            height: 26px; 
+            margin: 1px; 
+            border-radius: 4px; 
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.4); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+
+        /* Colori richiesti */
+        .wall { background-color: #d32f2f; } /* Muri Rossi */
+        .path { background-color: #ffff; border: 1px solid #2a2a2a; } /* Strada */
+        .goal { background-color: #1976d2; color: #ffffff; } /* Centro Blu */
+        .player { background-color: #dcdcdc; border: 1px solid #6e6e6e; color: #ffffff; } /* Pedine Grigie */
+        
+        #debugSection {
+            display: none; 
+            margin-top: 30px;
+        }
+        
+        textarea { 
+            width: 90%; 
+            max-width: 500px; 
+            height: 150px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 13px; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            background-color: #000; 
+            color: #0f0; 
+            resize: none;
+            box-shadow: inset 0px 0px 8px rgba(0,255,0,0.1);
+        }
+
+        .overlay {
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); 
+            z-index: 9999;
+            display: none; 
+            justify-content: center; 
+            align-items: center;
+            text-align: center; 
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+        .overlay-content {
+            background: #d32f2f; 
+            padding: 40px; 
+            border-radius: 15px;
+            border: 4px solid #fff; 
+            max-width: 80%;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: pulse 1.5s infinite alternate;
+        }
+        .overlay h2 { margin-top: 0; font-size: 32px; color: #fff;}
+        .overlay p { font-size: 22px; font-weight: bold; margin-bottom: 10px;}
+        
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        .status-badge {
+            background-color: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="resetOverlay" class="overlay">
+       <div class="overlay-content">
+         <h2>⚠️ ATTENZIONE ⚠️</h2>
+         <p>Macchina in fase di movimento e ripristino...</p>
+         <p>Rimuovere immediatamente le pedine!</p>
+         <p style="color: #ffeb3b; font-size: 26px;">NON TOCCARE IL LABIRINTO</p>
+       </div>
+    </div>
+
+    <h1>ESP Control Panel</h1>
+
+    <div>
+      <button class="btn btn-start" onclick="mockFetch('/start')">START</button>
+      <button class="btn btn-reset" onclick="mockFetch('/reset')">RESET</button>
+      <button class="btn btn-debug" onclick="toggleDebug()">DEBUG MODE</button>
+    </div>
+
+
+    <div id="mazeContainer" class="maze-container">
+        <div class="row"><div class="cell player">1</div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell player">2</div></div>
+        <div class="row"><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell goal">G</div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div></div>
+        <div class="row"><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div></div>
+        <div class="row"><div class="cell player">4</div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell player">3</div></div>
+    </div>
+
+    <div id="debugSection">
+      <div><span class="status-badge">Log Seriale Virtuale dell'ESP8266 (serialBuffer)</span></div>
+      <textarea id="logBox" readonly placeholder="Log Seriale Grezzo..."></textarea>
+    </div>
+
+    <script>
+        let serialBuffer = ""; 
+        const START_BYTE = 0xAA;
+        const RX_IDLE = 0, RX_CMD = 1, RX_LEN = 2, RX_DATA = 3, RX_CHK = 4;
+        let rxState = RX_IDLE;
+        let rxCmd = 0, rxLen = 0, rxCalcChk = 0, rxIndex = 0;
+        let virtualUnoSerialQueue = [];
+
+        function processVirtualSerial() {
+            while (virtualUnoSerialQueue.length > 0) {
+                let c = virtualUnoSerialQueue.shift();
+                if (rxState === RX_IDLE) {
+                    if (c === START_BYTE) { rxState = RX_CMD; rxCalcChk = 0; } 
+                    else { serialBuffer += String.fromCharCode(c); }
+                } 
+                else if (rxState === RX_CMD) { rxCmd = c; rxCalcChk ^= c; rxState = RX_LEN; } 
+                else if (rxState === RX_LEN) { rxLen = c; rxCalcChk ^= c; rxIndex = 0; if (rxLen > 0) rxState = RX_DATA; else rxState = RX_CHK; } 
+                else if (rxState === RX_DATA) { rxCalcChk ^= c; rxIndex++; if (rxIndex >= rxLen) rxState = RX_CHK; } 
+                else if (rxState === RX_CHK) {
+                    if (c === rxCalcChk) {
+                        if (rxCmd === 0x03) serialBuffer += "\n[[START_RESET]]\n";
+                        else if (rxCmd === 0x04) serialBuffer += "\n[[END_RESET]]\n";
+                    }
+                    rxState = RX_IDLE; 
+                }
+            }
+            if (serialBuffer.length > 1000) serialBuffer = serialBuffer.substring(serialBuffer.length - 500);
+        }
+
+        // Stringa seriale 11x11 corrispondente
+        function ottieniLabirintoScreenshot() {
+            return [
+                "1 # # # # # # # # # 2",
+                "x x # x x x x # x x x",
+                "# x # x # # x # # x #",
+                "# x x x # x x x # x #",
+                "# x # # # # # # # x #",
+                "# x # x x G x x # x #",
+                "# # # x # # # x # x #",
+                "# x x x x x # x # x #",
+                "# x # # # x # x # x #",
+                "x x x x # x x x x x x",
+                "4 # # # # # # # # # 3"
+            ].join("\n") + "\n";
+        }
+
+        function simulaDatiLabirinto(statoIniziale = false) {
+            let infoExtra = statoIniziale ? 
+                "Inserisci nuova RIGA e COLONNA per P1:\nStatus: PRONTO\n" : 
+                "Mossa elaborata!\nInserisci nuova RIGA e COLONNA per P1:\nStatus: IN CORSO\n";
+            
+            let pacchettoTesto = infoExtra + "\n" + ottieniLabirintoScreenshot() + "\n";
+            for (let i = 0; i < pacchettoTesto.length; i++) {
+                virtualUnoSerialQueue.push(pacchettoTesto.charCodeAt(i));
+            }
+            processVirtualSerial();
+        }
+
+        function simulaSegnaleBinario(cmd) {
+            virtualUnoSerialQueue.push(START_BYTE, cmd, 0, (0 ^ cmd ^ 0));
+            processVirtualSerial();
+        }
+
+        let fullLog = "";
+        let lastRenderedMaze = "";
+
+        function toggleDebug() {
+            let debugSec = document.getElementById('debugSection');
+            debugSec.style.display = (debugSec.style.display === "none" || debugSec.style.display === "") ? "block" : "none";
+        }
+
+        function mockFetch(endpoint) {
+            if (endpoint === '/start') {
+                serialBuffer += "[TX -> UNO] Inviato CMD_START (0x01)\n";
+                setTimeout(simulaDatiLabirinto, 400); 
+                return Promise.resolve({ text: () => "START sent" });
+            }
+            if (endpoint === '/reset') {
+                serialBuffer += "[TX -> UNO] Inviato CMD_RESET (0x02)\n";
+                setTimeout(() => simulaSegnaleBinario(0x03), 300);
+                setTimeout(() => simulaSegnaleBinario(0x04), 3300);
+                return Promise.resolve({ text: () => "RESET sent" });
+            }
+            if (endpoint === '/getLog') {
+                let dataToReturn = serialBuffer;
+                serialBuffer = ""; 
+                return Promise.resolve({ text: () => dataToReturn });
+            }
+        }
+
+        setInterval(function() {
+            mockFetch('/getLog')
+              .then(response => response.text())
+              .then(data => {
+                if(data.length > 0) {
+                  fullLog += data;
+                  document.getElementById('logBox').value += data;
+                  document.getElementById('logBox').scrollTop = document.getElementById('logBox').scrollHeight;
+                  parseMazeAndData();
+                }
+              });
+        }, 1000);
+
+        function parseMazeAndData() {
+            let lines = fullLog.split('\n');
+            let latestMazeLines = [];
+            let tempMazeLines = [];
+            let extraDataLines = [];
+            
+            for(let i = 0; i < lines.length; i++) {
+              let line = lines[i].trim();
+              if (line === "[[START_RESET]]") { document.getElementById('resetOverlay').style.display = 'flex'; continue; }
+              if (line === "[[END_RESET]]") { document.getElementById('resetOverlay').style.display = 'none'; continue; }
+              
+              if (line.length === 0) {
+                if (tempMazeLines.length === 11) latestMazeLines = [...tempMazeLines]; 
+                tempMazeLines = []; 
+                continue;
+              }
+              
+              if (/^[x#G1234\s]+$/.test(line)) {
+                tempMazeLines.push(line);
+                if (tempMazeLines.length === 11) latestMazeLines = [...tempMazeLines];
+              } else {
+                extraDataLines.push(line);
+              }
+            }
+            
+            if (latestMazeLines.length === 0 && tempMazeLines.length > 0) latestMazeLines = [...tempMazeLines];
+
+            let dataBox = document.getElementById('dataBox');
+            if (extraDataLines.length > 0) {
+              dataBox.innerText = extraDataLines.slice(-8).join('\n');
+              dataBox.style.display = 'block';
+            }
+
+            let currentMazeStr = latestMazeLines.join('|');
+            if (latestMazeLines.length > 0 && currentMazeStr !== lastRenderedMaze) {
+              lastRenderedMaze = currentMazeStr;
+              renderMaze(latestMazeLines);
+            }
+        }
+
+        function renderMaze(lines) {
+            let container = document.getElementById('mazeContainer');
+            container.innerHTML = ''; 
+            
+            lines.forEach(line => {
+              let rowDiv = document.createElement('div');
+              rowDiv.className = 'row';
+              let chars = line.replace(/\s/g, '').split('');
+              
+              chars.forEach(c => {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                if (c === '#') {
+                    cell.className = 'cell wall';
+                } else if (c === 'x') {
+                    cell.className = 'cell path';
+                } else if (c === 'G') {
+                    cell.className = 'cell goal';
+                    cell.innerText = 'G';
+                } else if (c === '1' || c === '2' || c === '3' || c === '4') {
+                    cell.className = 'cell player';
+                    cell.innerText = c;
+                }
+                rowDiv.appendChild(cell);
+              });
+              container.appendChild(rowDiv);
+            });
+        }
+
+        window.onload = function() {
+            let infoExtra = "Inserisci nuova RIGA e COLONNA per P1:\nStatus: PRONTO\n";
+            fullLog = infoExtra + "\n" + ottieniLabirintoScreenshot() + "\n";
+            document.getElementById('logBox').value = fullLog;
+            lastRenderedMaze = ottieniLabirintoScreenshot().split('\n').join('|');
+        };
+    </script>
+</body>
+</html>
